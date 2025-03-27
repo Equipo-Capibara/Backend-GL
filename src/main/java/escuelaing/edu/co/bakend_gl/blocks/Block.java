@@ -3,12 +3,12 @@ package escuelaing.edu.co.bakend_gl.blocks;
 public abstract class Block {
     protected String type;
     protected boolean destructible;
-    protected String allowedPlayer;
+    protected String allowedCharacter;
 
     public Block(String type, boolean destructible, String allowedPlayer){
         this.type = type;
         this.destructible = destructible;
-        this.allowedPlayer = allowedPlayer;
+        this.allowedCharacter = allowedPlayer;
     }
 
     public String getType(){
@@ -19,7 +19,7 @@ public abstract class Block {
         return destructible;
     }
 
-    public String getAllowedPlayer() {
-        return allowedPlayer;
+    public String getAllowedCharacter() {
+        return allowedCharacter;
     }
 }
