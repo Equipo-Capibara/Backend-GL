@@ -2,7 +2,7 @@ package escuelaing.edu.co.bakend_gl.model.blocks;
 
 public class BlockWater extends Block{
 
-    public BlockWater(){
-        super("Water", true, "Aqua");
+    public BlockWater(int x, int y){
+        super(x, y, "Water", true, "Aqua");
     }
 }

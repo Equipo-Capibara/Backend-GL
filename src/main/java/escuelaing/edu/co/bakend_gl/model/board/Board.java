@@ -1,5 +1,6 @@
 package escuelaing.edu.co.bakend_gl.model.board;
 
+import escuelaing.edu.co.bakend_gl.model.blocks.BlockIron;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import java.util.List;
@@ -7,10 +8,10 @@ public class Board {
 
     private int width;
     private int height;
-    private List<Block> blocks;
+    private List<BlockIron> blocks;
     private Character player;
 
-    public Board(int width, int height, List<Block> blocks, Character player) {
+    public Board(int width, int height, List<BlockIron> blocks, Character player) {
         this.width = width;
         this.height = height;
         this.blocks = blocks;
@@ -21,7 +22,7 @@ public class Board {
         return player;
     }
 
-    public List<Block> getBlocks() {
+    public List<BlockIron> getBlocks() {
         return blocks;
     }
 
