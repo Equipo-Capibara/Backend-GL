@@ -1,4 +1,4 @@
-package escuelaing.edu.co.bakend_gl.service;
+package escuelaing.edu.co.bakend_gl.services;
 
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;

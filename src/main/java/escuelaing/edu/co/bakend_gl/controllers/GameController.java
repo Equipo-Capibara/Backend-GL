@@ -1,7 +1,7 @@
 package escuelaing.edu.co.bakend_gl.controllers;
 
 import escuelaing.edu.co.bakend_gl.model.board.Board;
-import escuelaing.edu.co.bakend_gl.service.GameService;
+import escuelaing.edu.co.bakend_gl.services.GameService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
