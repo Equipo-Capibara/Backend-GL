@@ -5,11 +5,20 @@ import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
 import escuelaing.edu.co.bakend_gl.services.RoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/room")
 public class RoomController {
 
     private final RoomService roomService;
@@ -18,24 +27,23 @@ public class RoomController {
         this.roomService = roomService;
     }
 
-    // Crear una nueva sala
-    @MessageMapping("/createRoom")
-    @SendTo("/topic/room")
-    public ResponseEntity<Room> createRoom(String hostId) {
+    @PostMapping("/create")
+    public ResponseEntity<Room> createRoom(@RequestBody String hostId) {
         Room room = roomService.createRoom(hostId);
-        return new ResponseEntity<>(room, HttpStatus.CREATED); // Respuesta con código 201 (creado)
+        return new ResponseEntity<>(room, HttpStatus.CREATED);
     }
 
     // Unirse a una sala
-    @MessageMapping("/joinRoom")
-    @SendTo("/topic/room/{roomCode}")
-    public ResponseEntity<Object> joinRoom(String roomCode, Player player) {
-        boolean joined = roomService.joinRoom(roomCode, player);
-        if (joined) {
-            return new ResponseEntity<>(roomService.getRoom(roomCode), HttpStatus.OK); // Respuesta con código 200 (OK)
-        } else {
-            return new ResponseEntity<>("No se pudo unir a la sala", HttpStatus.BAD_REQUEST); // Respuesta con código 400 (Bad Request)
-        }
+    @MessageMapping("/joinRoom/{roomId}")
+    @SendTo("/topic/room/{roomId}/join-alert")
+    public Map<String, String> joinRoom(@DestinationVariable String roomId, @Payload Map<String, String> payload) {
+        System.out.println("📩 Nueva unión en la sala " + roomId);
+
+        Map<String, String> message = new HashMap<>();
+        message.put("username", payload.getOrDefault("username", "Jugador"));
+        message.put("avatarUrl", payload.getOrDefault("avatarUrl", "default-avatar.png")); // Imagen por defecto
+
+        return message;
     }
 
     // Confirmar selección de personaje
