@@ -1,3 +1,4 @@
+/*
 package escuelaing.edu.co.bakend_gl;
 
 import org.springframework.context.annotation.Configuration;
@@ -22,3 +23,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
 }
+
+ */

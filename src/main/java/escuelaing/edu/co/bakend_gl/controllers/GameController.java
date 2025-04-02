@@ -21,6 +21,7 @@ public class GameController {
     }
 
     @GetMapping("/state")
+    @ResponseBody
     public Board getGameState() {
         return gameService.getBoard();
     }
