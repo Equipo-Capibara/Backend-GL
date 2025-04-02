@@ -49,6 +49,7 @@ public class GameService {
     public void movePlayer(String direction) {
         int newX = player.getX();
         int newY = player.getY();
+        // int newY = board.getPlayer.getY();
 
         switch (direction.toLowerCase()) {
             case "w": newY--; break;
@@ -57,24 +58,12 @@ public class GameService {
             case "d": newX++; break;
         }
         board.movePlayer(newX, newY);
+        board.getPlayer().setDirectionView(direction);
     }
 
-    public void useAbility() {
-        player.useAbility();
-    }
-
-    public void printJson(Board board) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            String json = objectMapper.writeValueAsString(board);
-            System.out.println(json);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+    public void createBlock(){}
 
     public Board getBoard() {
-        printJson(board);
         return board;
     }
 }
