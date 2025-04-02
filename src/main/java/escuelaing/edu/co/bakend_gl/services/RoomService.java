@@ -3,85 +3,75 @@ package escuelaing.edu.co.bakend_gl.services;
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
 import escuelaing.edu.co.bakend_gl.repository.RoomRepository;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class RoomService {
+    private final RoomRepository roomRepository;
 
-    private final Map<String, Room> rooms = new HashMap<>();
-    private final SimpMessagingTemplate messagingTemplate;
-
-    public RoomService(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
+    public RoomService(RoomRepository roomRepository) {
+        this.roomRepository = roomRepository;
     }
 
+    // Crear una nueva sala
     public Room createRoom(String hostId) {
         Room room = new Room(hostId);
-        rooms.put(room.getCode(), room);
+        // Guardar la sala en MongoDB
+        roomRepository.save(room);
         return room;
     }
 
+    // Unirse a una sala existente
+    public boolean joinRoom(String roomCode, Player player) {
+        Room room = roomRepository.findByCode(roomCode);
+        if (room == null) {
+            return false; // Sala no encontrada
+        }
+
+        if (room.canJoin()) {
+            room.addPlayer(player);
+            // Guardar cambios en la base de datos
+            roomRepository.save(room);
+            return true;
+        }
+        return false; // No se puede unir
+    }
+
+    // Confirmar selección de personaje
+    public boolean confirmCharacterSelection(String roomCode, String playerId) {
+        Room room = roomRepository.findByCode(roomCode);
+        return room != null && room.confirmCharacterSelection(playerId);
+    }
+
+    // Iniciar el juego
+    public boolean startGame(String roomCode) {
+        Room room = roomRepository.findByCode(roomCode);
+        if (room != null && room.allPlayersConfirmed()) {
+            room.startGame();
+            // Guardar cambios en la base de datos
+            roomRepository.save(room);
+            return true;
+        }
+        return false;
+    }
+
+    // Eliminar un jugador de la sala
+    public boolean removePlayer(String roomCode, String playerId) {
+        Room room = roomRepository.findByCode(roomCode);
+        if (room != null) {
+            room.removePlayer(playerId);
+            // Guardar cambios en la base de datos
+            roomRepository.save(room);
+            return true;
+        }
+        return false;
+    }
+
+    // Obtener una sala por su código
     public Room getRoom(String roomCode) {
-        return rooms.get(roomCode);
+        return roomRepository.findByCode(roomCode);
     }
-
-    public void joinRoom(String roomCode, Player player) {
-        Room room = rooms.get(roomCode);
-        if (room == null) {
-            messagingTemplate.convertAndSend("/topic/errors", "Código de sala inválido");
-            return;
-        }
-
-        if (!room.canJoin()) {
-            messagingTemplate.convertAndSend("/topic/errors", "No puedes unirte, la sala está llena o en partida.");
-            return;
-        }
-
-        room.addPlayer(player);
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode, room.getPlayers());
-    }
-
-    public void confirmCharacterSelection(String roomCode, String playerId) {
-        Room room = rooms.get(roomCode);
-        if (room == null) {
-            messagingTemplate.convertAndSend("/topic/errors", "La sala no existe.");
-            return;
-        }
-
-        if (!room.confirmCharacterSelection(playerId)) {
-            messagingTemplate.convertAndSend("/topic/errors", "No se pudo confirmar la selección del personaje.");
-            return;
-        }
-
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode, room.getPlayers());
-    }
-
-    public void startGame(String roomCode) {
-        Room room = rooms.get(roomCode);
-        if (room == null || !room.allPlayersConfirmed()) {
-            messagingTemplate.convertAndSend("/topic/errors", "No se puede iniciar la partida.");
-            return;
-        }
-
-        room.startGame();
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/start", "¡La partida ha comenzado!");
-    }
-
-    public void removePlayer(String roomCode, String playerId) {
-        Room room = rooms.get(roomCode);
-        if (room == null) {
-            messagingTemplate.convertAndSend("/topic/errors", "La sala no existe.");
-            return;
-        }
-
-        room.removePlayer(playerId);
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode, room.getPlayers());
-        messagingTemplate.convertAndSend("/topic/player/" + playerId + "/expelled", "Has sido expulsado de la sala.");
-    }
-
 }
+
