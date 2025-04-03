@@ -7,34 +7,29 @@ import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
 import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GameService {
     private Board board;
-    private Character player;
+    //private Character player;
+    private List<Character> players;
+    private final ConcurrentHashMap<String, Object> locks = new ConcurrentHashMap<>();
 
-    public GameService() {
-        String characterType = "fire";
-        switch (characterType.toLowerCase()) {
-            case "fire":  player = new Flame(2, 2); break;
-            case "water": player = new Aqua(2, 2); break;
-            case "air":   player = new Brisa(2, 2); break;
-            case "earth": player = new Stone(2, 2); break;
-            default:      throw new IllegalArgumentException("Tipo de personaje no válido.");
+    public GameService(List<Character> players) {
+        if (players.size() != 4) {
+            throw new IllegalArgumentException("El juego debe tener exactamente 4 jugadores.");
         }
+        this.players = players;
 
-        //nuevo jugador
-        Character player2 = new Aqua(0, 5);
+        // Para la primera entrega usamos un mapa estatico
 
-        // Inicializar el tablero
-        board = new Board(10, 10, player, player2);
+        this.board = new Board(10, 10, players);
 
         board.addBlock(new BlockIron(3, 3));
         board.addBlock(new BlockIron(4, 4));
         board.addBlock(new BlockIron(5, 5));
-        //board.addBlock(new BlockIron(0, 5));
-
-
 
         // Agregar bloques de agua
         board.addBlock(new BlockWater(2, 5));
@@ -51,9 +46,7 @@ public class GameService {
         // Colocar la puerta en el tablero
         board.placeDoor(9, 9);
 
-        System.out.println("----------------------------------------");
         createBlock();
-        System.out.println("----------------------------------------");
     }
 
     public void movePlayer(String direction) {
@@ -87,7 +80,7 @@ public class GameService {
         while (board.isMoveValid(x, y) && board.getBox(x, y).getBlock() == null && board.getBox(x, y).getCharacter() == null) {
             Block newBlock = new BlockFire(x, y);
             board.addBlock(newBlock);
-            System.out.println("Bloque creado en: (" + x + ", " + y + ")");
+            System.out.println("Bloque creado en: (" + x + ", " + y + ")"); // borrar esto
 
             // Mover la posición en la misma dirección
             switch (player.getDirectionView()) {

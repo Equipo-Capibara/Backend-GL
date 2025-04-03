@@ -5,22 +5,22 @@ import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Board {
     private int width;
     private int height;
     private Box[][] grid;
     private List<Key> collectedKeys;
-    private Character player;
-
-    private Character player2;
+    private List<Character> players;
     private Door door;
 
-    public Board(int width, int height, Character player, Character player2) {
+    public Board(int width, int height, List<Character> players) {
         this.width = width;
         this.height = height;
-        this.player = player;
+        this.players = players;
         this.collectedKeys = new ArrayList<>();
         this.grid = new Box[width][height];
         this.door = null;
