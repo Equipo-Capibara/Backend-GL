@@ -23,12 +23,18 @@ public class GameService {
             default:      throw new IllegalArgumentException("Tipo de personaje no válido.");
         }
 
+        //nuevo jugador
+        Character player2 = new Aqua(0, 5);
+
         // Inicializar el tablero
-        board = new Board(10, 10, player);
+        board = new Board(10, 10, player, player2);
 
         board.addBlock(new BlockIron(3, 3));
         board.addBlock(new BlockIron(4, 4));
         board.addBlock(new BlockIron(5, 5));
+        //board.addBlock(new BlockIron(0, 5));
+
+
 
         // Agregar bloques de agua
         board.addBlock(new BlockWater(2, 5));
@@ -44,6 +50,10 @@ public class GameService {
 
         // Colocar la puerta en el tablero
         board.placeDoor(9, 9);
+
+        System.out.println("----------------------------------------");
+        createBlock();
+        System.out.println("----------------------------------------");
     }
 
     public void movePlayer(String direction) {
@@ -61,7 +71,34 @@ public class GameService {
         board.getPlayer().setDirectionView(direction);
     }
 
-    public void createBlock(){}
+    public void createBlock() {
+        int x = player.getX();
+        int y = player.getY();
+
+        // Determinar la dirección de construcción
+        switch (player.getDirectionView()) {
+            case "w": y--; break; // Arriba
+            case "s": y++; break; // Abajo
+            case "a": x--; break; // Izquierda
+            case "d": x++; break; // Derecha
+        }
+
+        // Mientras no haya un bloque o personaje, sigue construyendo
+        while (board.isMoveValid(x, y) && board.getBox(x, y).getBlock() == null && board.getBox(x, y).getCharacter() == null) {
+            Block newBlock = new BlockFire(x, y);
+            board.addBlock(newBlock);
+            System.out.println("Bloque creado en: (" + x + ", " + y + ")");
+
+            // Mover la posición en la misma dirección
+            switch (player.getDirectionView()) {
+                case "w": y--; break;
+                case "s": y++; break;
+                case "a": x--; break;
+                case "d": x++; break;
+            }
+        }
+    }
+
 
     public Board getBoard() {
         return board;

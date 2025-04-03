@@ -13,9 +13,11 @@ public class Board {
     private Box[][] grid;
     private List<Key> collectedKeys;
     private Character player;
+
+    private Character player2;
     private Door door;
 
-    public Board(int width, int height, Character player) {
+    public Board(int width, int height, Character player, Character player2) {
         this.width = width;
         this.height = height;
         this.player = player;
@@ -33,6 +35,10 @@ public class Board {
         // Ubicar al jugador en una celda inicial (ejemplo: arriba a la izquierda)
         grid[0][0].setCharacter(player);
         player.setPosition(0, 0);
+
+        // Ubicar al jugador 2en una celda inicial (ejemplo: arriba a la izquierda)
+        grid[0][5].setCharacter(player2);
+        player2.setPosition(0, 5);
     }
 
     public Box getBox(int x, int y) {
@@ -129,6 +135,10 @@ public class Board {
 
     public Character getPlayer() {
         return player;
+    }
+
+    public Character getPlayer2(){
+        return this.player2;
     }
 
     public void setPlayer(Character player) {
