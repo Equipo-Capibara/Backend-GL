@@ -13,85 +13,103 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class GameService {
     private Board board;
-    //private Character player;
     private List<Character> players;
     private final ConcurrentHashMap<String, Object> locks = new ConcurrentHashMap<>();
 
-    public GameService(List<Character> players) {
+    // Aca esto esta quemado en codigo
+    public GameService() {
+        System.out.println("Inicializando GameService...");
+        initGame(List.of(
+                new Flame("1",0, 0),
+                new Aqua("2",9, 0),
+                new Stone("3",0, 9),
+                new Brisa("4",9, 9)
+        ));
+    }
+
+
+    public void initGame(List<Character> players) {
         if (players.size() != 4) {
             throw new IllegalArgumentException("El juego debe tener exactamente 4 jugadores.");
         }
         this.players = players;
-
-        // Para la primera entrega usamos un mapa estatico
-
         this.board = new Board(10, 10, players);
 
+        // Mapa estático inicial (temporal para la primera entrega)
         board.addBlock(new BlockIron(3, 3));
         board.addBlock(new BlockIron(4, 4));
         board.addBlock(new BlockIron(5, 5));
 
-        // Agregar bloques de agua
         board.addBlock(new BlockWater(2, 5));
-
-        // Agregar bloques de fuego
         board.addBlock(new BlockFire(7, 7));
 
-        // Colocar llaves en el tablero
-        board.getBox(3, 3).setKey(new KeyFlame(3, 3));   // Llave de fuego
-        board.getBox(6, 6).setKey(new KeyAqua(6, 6));   // Llave de agua
-        board.getBox(7, 2).setKey(new KeyStone(7, 2));  // Llave de tierra
-        board.getBox(1, 8).setKey(new KeyBrisa(1, 8));    // Llave de aire
+        board.getBox(3, 3).setKey(new KeyFlame(3, 3));
+        board.getBox(6, 6).setKey(new KeyAqua(6, 6));
+        board.getBox(7, 2).setKey(new KeyStone(7, 2));
+        board.getBox(1, 8).setKey(new KeyBrisa(1, 8));
 
-        // Colocar la puerta en el tablero
         board.placeDoor(9, 9);
-
-        createBlock();
     }
 
-    public void movePlayer(String direction) {
+    public void movePlayer(String playerId, String direction) {
+        // Buscar al jugador por su ID
+        Character player = players.stream()
+                .filter(p -> p.getId().equals(playerId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Jugador no encontrado"));
+
         int newX = player.getX();
         int newY = player.getY();
-        // int newY = board.getPlayer.getY();
 
         switch (direction.toLowerCase()) {
             case "w": newY--; break;
             case "s": newY++; break;
             case "a": newX--; break;
             case "d": newX++; break;
+            default:
+                throw new IllegalArgumentException("Dirección inválida: " + direction);
         }
-        board.movePlayer(newX, newY);
-        board.getPlayer().setDirectionView(direction);
+
+        if (board.isMoveValid(newX, newY)) {
+            board.movePlayer(player, newX, newY);
+            player.setDirectionView(direction);
+        }
     }
 
-    public void createBlock() {
+    public void createBlock(String playerId) {
+        Character player = players.stream()
+                .filter(p -> p.getId().equals(playerId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Jugador no encontrado"));
+
         int x = player.getX();
         int y = player.getY();
 
-        // Determinar la dirección de construcción
         switch (player.getDirectionView()) {
-            case "w": y--; break; // Arriba
-            case "s": y++; break; // Abajo
-            case "a": x--; break; // Izquierda
-            case "d": x++; break; // Derecha
+            case "w": y--; break;
+            case "s": y++; break;
+            case "a": x--; break;
+            case "d": x++; break;
         }
 
-        // Mientras no haya un bloque o personaje, sigue construyendo
-        while (board.isMoveValid(x, y) && board.getBox(x, y).getBlock() == null && board.getBox(x, y).getCharacter() == null) {
-            Block newBlock = new BlockFire(x, y);
-            board.addBlock(newBlock);
-            System.out.println("Bloque creado en: (" + x + ", " + y + ")"); // borrar esto
+        String key = x + "," + y;
+        locks.putIfAbsent(key, new Object());
 
-            // Mover la posición en la misma dirección
-            switch (player.getDirectionView()) {
-                case "w": y--; break;
-                case "s": y++; break;
-                case "a": x--; break;
-                case "d": x++; break;
+        synchronized (locks.get(key)) {
+            while (board.isMoveValid(x, y) && board.getBox(x, y).getBlock() == null && board.getBox(x, y).getCharacter() == null) {
+                board.addBlock(new BlockFire(x, y));
+
+                switch (player.getDirectionView()) {
+                    case "w": y--; break;
+                    case "s": y++; break;
+                    case "a": x--; break;
+                    case "d": x++; break;
+                }
+                key = x + "," + y;
+                locks.putIfAbsent(key, new Object());
             }
         }
     }
-
 
     public Board getBoard() {
         return board;

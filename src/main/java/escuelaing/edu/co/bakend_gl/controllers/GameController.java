@@ -15,8 +15,8 @@ public class GameController {
     }
 
     @PostMapping("/move")
-    public void movePlayer(@RequestParam String direction) {
-        gameService.movePlayer(direction);
+    public void movePlayer(@RequestParam String playerId, @RequestParam String direction) {
+        gameService.movePlayer(playerId, direction);
     }
 
     @GetMapping("/state")
