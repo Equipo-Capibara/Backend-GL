@@ -24,4 +24,14 @@ public class GameController {
     public Board getGameState() {
         return gameService.getBoard();
     }
+
+    @PostMapping("/createBlock")
+    public void createBlock(@RequestParam String playerId){
+        gameService.createBlock(playerId);
+    }
+
+    @PostMapping("/destroyBlock")
+    public void destroyBlock(@RequestParam String playerId){
+        gameService.destroyBlock(playerId);
+    }
 }
