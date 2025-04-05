@@ -137,6 +137,43 @@ public class GameService {
         }
     }
 
+    public void destroyBlock() {
+        String direction = player.getDirection();
+        int dx = 0, dy = 0;
+
+        switch (direction.toLowerCase()) {
+            case "w": dy = -1; break;
+            case "s": dy = 1; break;
+            case "a": dx = -1; break;
+            case "d": dx = 1; break;
+            default: return; // dirección inválida
+        }
+
+        int x = player.getX();
+        int y = player.getY();
+
+        while (true) {
+            x += dx;
+            y += dy;
+
+            Box box = board.getBox(x, y);
+            if (box == null) {
+                break; // fuera del mapa
+            }
+
+            if (box.getCharacter() != null) {
+                break; // hay un personaje, no se destruye nada
+            }
+
+            if (box.getBlock() != null) {
+                board.removeBlock(x, y); // método que debes tener para quitar el bloque
+                break; // solo se destruye el primero que encuentra
+            }
+        }
+    }
+
+
+
 
     public void useAbility() {
         player.useAbility();

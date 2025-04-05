@@ -49,4 +49,11 @@ public class GameController {
         gameService.buildBlocks();
         return ResponseEntity.ok(gameService.getBoard());
     }
+
+    @PostMapping("/destroy")
+    public ResponseEntity<Board> destroyBlock() {
+        gameService.destroyBlock();
+        return ResponseEntity.ok(gameService.getBoard());
+    }
+
 }
