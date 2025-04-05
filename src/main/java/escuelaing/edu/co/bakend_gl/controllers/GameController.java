@@ -3,6 +3,7 @@ package escuelaing.edu.co.bakend_gl.controllers;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.services.GameService;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -34,4 +35,6 @@ public class GameController {
     public void destroyBlock(@RequestParam String playerId){
         gameService.destroyBlock(playerId);
     }
+
+
 }

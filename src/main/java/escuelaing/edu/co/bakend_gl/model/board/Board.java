@@ -75,6 +75,7 @@ public class Board {
     private void collectKey(Character player, Box box) {
         if (box.hasKey() && box.getKey().canBePickedBy(player)) {
             collectedKeys.add(box.getKey());
+            player.pickUpKey(); // Decimos que el jugador tiene la llave
             System.out.println("Llave recogida: " + box.getKey().getClass().getSimpleName());
 
             // Eliminar la llave del tablero
@@ -139,4 +140,5 @@ public class Board {
     public Door getDoor() {
         return door;
     }
+
 }

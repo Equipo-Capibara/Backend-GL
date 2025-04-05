@@ -5,6 +5,7 @@ public abstract class Character {
     protected String element;
     protected String id;
     protected String directionView; // s - abajo, w - arriba, a - izq, d - der
+    protected boolean hasKey;
 
     public Character(String id, int x, int y, String element) {
         this.id = id;
@@ -30,6 +31,10 @@ public abstract class Character {
     public String getDirectionView(){return this.directionView;}
 
     public String getId(){return this.id; }
+
+    public boolean isHasKey(){return this.hasKey; }
+
+    public void pickUpKey(){this.hasKey = true; }
 
 
 }

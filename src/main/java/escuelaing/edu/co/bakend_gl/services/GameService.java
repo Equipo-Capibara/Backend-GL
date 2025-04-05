@@ -3,9 +3,12 @@ package escuelaing.edu.co.bakend_gl.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.blocks.*;
+import escuelaing.edu.co.bakend_gl.model.board.Door;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +18,9 @@ public class GameService {
     private Board board;
     private List<Character> players;
     private final ConcurrentHashMap<String, Object> locks = new ConcurrentHashMap<>();
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     // Aca esto esta quemado en codigo
     public GameService() {
@@ -73,7 +79,22 @@ public class GameService {
         if (board.isMoveValid(newX, newY)) {
             board.movePlayer(player, newX, newY);
             player.setDirectionView(direction);
+
+            // Verifica si está en la puerta con la llave
+            Door door = board.getDoor();
+            if (!door.isLocked() && player.isHasKey() && player.getX() == door.getX() && player.getY() == door.getY()) {
+                // Elimina al jugador del tablero
+                board.getBox(door.getX(), door.getY()).removeCharacter();
+                board.getPlayers().remove(player);
+                System.out.println("Jugador " + player.getId() + " ha salido por la puerta");
+
+                // Verifica si el juego terminó
+                if (board.getPlayers().isEmpty()) {
+                    messagingTemplate.convertAndSend("/topic/game-finished", "¡Juego terminado!");
+                }
+            }
         }
+
     }
 
     public void createBlock(String playerId) {
