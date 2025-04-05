@@ -4,7 +4,6 @@ import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.services.GameService;
 import escuelaing.edu.co.bakend_gl.services.PlayerService;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,8 +13,7 @@ public class GameController {
     private final GameService gameService;
     private final PlayerService playerService;
 
-    public GameController( GameService gameService, PlayerService playerService) {
-
+    public GameController(GameService gameService, PlayerService playerService) {
         this.gameService = gameService;
         this.playerService = playerService;
     }
@@ -25,7 +23,6 @@ public class GameController {
         gameService.movePlayer(direction);
         return ResponseEntity.ok(gameService.getBoard());
     }
-
 
     @GetMapping("/state")
     @ResponseBody
@@ -46,4 +43,10 @@ public class GameController {
         gameService.switchLevel(level);
     }
 
+    // Nuevo endpoint para construir bloque
+    @PostMapping("/build")
+    public ResponseEntity<Board> buildBlock() {
+        gameService.buildBlocks();
+        return ResponseEntity.ok(gameService.getBoard());
+    }
 }
