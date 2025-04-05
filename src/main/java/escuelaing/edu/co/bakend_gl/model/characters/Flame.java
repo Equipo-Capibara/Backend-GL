@@ -1,8 +1,8 @@
 package escuelaing.edu.co.bakend_gl.model.characters;
 
 public class Flame extends Character {
-    public Flame(String id, int x, int y) {
-        super(id, x, y, "fire");
+    public Flame(int x, int y) {
+        super(x, y, "fire");
     }
 
     @Override

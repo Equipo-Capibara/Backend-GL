@@ -3,44 +3,18 @@ package escuelaing.edu.co.bakend_gl.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.blocks.*;
-import escuelaing.edu.co.bakend_gl.model.board.Door;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GameService {
     private Board board;
-    private List<Character> players;
-    private final ConcurrentHashMap<String, Object> locks = new ConcurrentHashMap<>();
+    private Character player;
     private int currentLevel = 1;
 
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
-    // Aca esto esta quemado en codigo
     public GameService() {
-        System.out.println("Inicializando GameService...");
-        initGame(List.of(
-                new Flame("1",0, 0),
-                new Aqua("2",9, 0),
-                new Stone("3",0, 9),
-                new Brisa("4",9, 9)
-        ));
-    }
-
-
-    public void initGame(List<Character> players) {
-        if (players.size() != 4) {
-            throw new IllegalArgumentException("El juego debe tener exactamente 4 jugadores.");
-        }
-        this.players = players;
         loadLevel(currentLevel);
     }
 
@@ -117,13 +91,7 @@ public class GameService {
         }
     }
 
-    public void movePlayer(String playerId, String direction) {
-        // Buscar al jugador por su ID
-        Character player = players.stream()
-                .filter(p -> p.getId().equals(playerId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Jugador no encontrado"));
-
+    public void movePlayer(String direction) {
         int newX = player.getX();
         int newY = player.getY();
 
@@ -132,111 +100,12 @@ public class GameService {
             case "s": newY++; break;
             case "a": newX--; break;
             case "d": newX++; break;
-            default:
-                throw new IllegalArgumentException("Dirección inválida: " + direction);
         }
-
-        if (board.isMoveValid(newX, newY)) {
-            board.movePlayer(player, newX, newY);
-            player.setDirectionView(direction);
-
-            // Verifica si está en la puerta con la llave
-            Door door = board.getDoor();
-            if (!door.isLocked() && player.isHasKey() && player.getX() == door.getX() && player.getY() == door.getY()) {
-                // Elimina al jugador del tablero
-                board.getBox(door.getX(), door.getY()).removeCharacter();
-                board.getPlayers().remove(player);
-                System.out.println("Jugador " + player.getId() + " ha salido por la puerta");
-
-                // Verifica si el juego terminó
-                if (board.getPlayers().isEmpty()) {
-                    messagingTemplate.convertAndSend("/topic/game-finished", "¡Juego terminado!");
-                }
-            }
-        }
-
+        board.movePlayer(newX, newY);
     }
 
-    public void createBlock(String playerId) {
-        Character player = players.stream()
-                .filter(p -> p.getId().equals(playerId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Jugador no encontrado"));
-
-        int x = player.getX();
-        int y = player.getY();
-
-        switch (player.getDirectionView()) {
-            case "w": y--; break;
-            case "s": y++; break;
-            case "a": x--; break;
-            case "d": x++; break;
-        }
-
-        String key = x + "," + y;
-        locks.putIfAbsent(key, new Object());
-
-        synchronized (locks.get(key)) {
-            while (board.isMoveValid(x, y) && board.getBox(x, y).getBlock() == null && board.getBox(x, y).getCharacter() == null) {
-                board.addBlock(new BlockFire(x, y));
-
-                switch (player.getDirectionView()) {
-                    case "w": y--; break;
-                    case "s": y++; break;
-                    case "a": x--; break;
-                    case "d": x++; break;
-                }
-                key = x + "," + y;
-                locks.putIfAbsent(key, new Object());
-            }
-        }
-    }
-
-    public void destroyBlock(String playerId) {
-        Character player = players.stream()
-                .filter(p -> p.getId().equals(playerId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Jugador no encontrado"));
-
-        int x = player.getX();
-        int y = player.getY();
-
-        // Moverse en la dirección en la que está mirando el jugador
-        switch (player.getDirectionView()) {
-            case "w": y--; break;
-            case "s": y++; break;
-            case "a": x--; break;
-            case "d": x++; break;
-        }
-
-        String key = x + "," + y;
-        locks.putIfAbsent(key, new Object());
-
-        synchronized (locks.get(key)) {
-            Block initialBlock = board.getBox(x, y).getBlock();
-            if (initialBlock == null || !initialBlock.isDestructible() || !initialBlock.getAllowedCharacter().equals(player.getClass().getSimpleName())) {
-                return; // No hay bloque, no es destructible o el jugador no puede destruirlo
-            }
-
-            String blockType = initialBlock.getType();
-
-            // Recorremos en la dirección hasta encontrar un bloque distinto o vacío
-            while (board.getBox(x, y) != null && board.getBox(x, y).getBlock() != null &&
-                    board.getBox(x, y).getBlock().getType().equals(blockType)) {
-
-                board.removeBlock(x, y);
-
-                switch (player.getDirectionView()) {
-                    case "w": y--; break;
-                    case "s": y++; break;
-                    case "a": x--; break;
-                    case "d": x++; break;
-                }
-
-                key = x + "," + y;
-                locks.putIfAbsent(key, new Object());
-            }
-        }
+    public void useAbility() {
+        player.useAbility();
     }
 
     public Board getBoard() {
@@ -248,4 +117,3 @@ public class GameService {
         loadLevel(level);
     }
 }
-
