@@ -21,9 +21,11 @@ public class GameController {
     }
 
     @PostMapping("/move")
-    public void movePlayer(@RequestParam String direction) {
+    public ResponseEntity<Board> movePlayer(@RequestParam String direction) {
         gameService.movePlayer(direction);
+        return ResponseEntity.ok(gameService.getBoard());
     }
+
 
     @GetMapping("/state")
     @ResponseBody
@@ -37,6 +39,10 @@ public class GameController {
         System.out.println(newPlayer.getName());
         System.out.println(newPlayer.getId());
         return ResponseEntity.ok(newPlayer);
+
+    @GetMapping("/switch-level")
+    public void switchLevel(@RequestParam int level) {
+        gameService.switchLevel(level);
     }
 
 }

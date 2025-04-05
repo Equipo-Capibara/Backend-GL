@@ -13,6 +13,7 @@ public class Board {
     private Box[][] grid;
     private List<Key> collectedKeys;
     private Character player;
+    private List<Character> characters;  // NUEVA LISTA
     private Door door;
 
     public Board(int width, int height, Character player) {
@@ -20,6 +21,7 @@ public class Board {
         this.height = height;
         this.player = player;
         this.collectedKeys = new ArrayList<>();
+        this.characters = new ArrayList<>(); // INICIALIZACIÓN
         this.grid = new Box[width][height];
         this.door = null;
 
@@ -30,9 +32,22 @@ public class Board {
             }
         }
 
-        // Ubicar al jugador en una celda inicial (ejemplo: arriba a la izquierda)
-        grid[0][0].setCharacter(player);
-        player.setPosition(0, 0);
+        // Ubicar al jugador principal
+        grid[player.getX()][player.getY()].setCharacter(player);
+        characters.add(player);
+    }
+
+    public void addCharacter(Character character) {
+        int x = character.getX();
+        int y = character.getY();
+        Box box = getBox(x, y);
+        if (box != null && box.getCharacter() == null && box.isWalkable()) {
+            box.setCharacter(character);
+            character.setPosition(x, y);
+            characters.add(character);
+        } else {
+            throw new IllegalStateException("No se puede colocar el personaje en (" + x + "," + y + "). Ya hay algo ahí.");
+        }
     }
 
     public Box getBox(int x, int y) {
@@ -49,13 +64,11 @@ public class Board {
 
     public void movePlayer(int newX, int newY) {
         if (isMoveValid(newX, newY)) {
-            // Eliminar al jugador de la casilla actual
             Box currentBox = getBox(player.getX(), player.getY());
             if (currentBox != null) {
                 currentBox.removeCharacter();
             }
 
-            // Moverlo a la nueva casilla
             Box newBox = getBox(newX, newY);
             if (newBox != null) {
                 newBox.setCharacter(player);
@@ -70,10 +83,8 @@ public class Board {
             collectedKeys.add(box.getKey());
             System.out.println("Llave recogida: " + box.getKey().getClass().getSimpleName());
 
-            // Eliminar la llave del tablero
             box.removeKey();
 
-            // Verificar si se han recogido todas las llaves
             if (collectedKeys.size() == 4) {
                 unlockDoor();
             }
@@ -109,15 +120,15 @@ public class Board {
         }
     }
 
+    // GETTERS
+
     public int getWidth() {
         return width;
     }
 
-
     public int getHeight() {
         return height;
     }
-
 
     public Box[][] getGrid() {
         return grid;
@@ -137,5 +148,9 @@ public class Board {
 
     public Door getDoor() {
         return door;
+    }
+
+    public List<Character> getCharacters() {
+        return characters;
     }
 }
