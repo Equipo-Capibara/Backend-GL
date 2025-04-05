@@ -5,21 +5,24 @@ import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Board {
     private int width;
     private int height;
     private Box[][] grid;
     private List<Key> collectedKeys;
+    private List<Character> players;
     private Character player;
-    private List<Character> characters;  // NUEVA LISTA
+    private List<Character> characters; 
     private Door door;
 
-    public Board(int width, int height, Character player) {
+    public Board(int width, int height, List<Character> players) {
         this.width = width;
         this.height = height;
-        this.player = player;
+        this.players = players;
         this.collectedKeys = new ArrayList<>();
         this.characters = new ArrayList<>(); // INICIALIZACIÓN
         this.grid = new Box[width][height];
@@ -32,9 +35,14 @@ public class Board {
             }
         }
 
-        // Ubicar al jugador principal
-        grid[player.getX()][player.getY()].setCharacter(player);
-        characters.add(player);
+
+        // Ubicar a los jugadores en posiciones iniciales
+        int[][] startPositions = {{0, 0}, {9, 9}, {0, 9}, {9, 0}};
+        for (int i = 0; i < players.size(); i++) {
+            int x = startPositions[i][0];
+            int y = startPositions[i][1];
+            grid[x][y].setCharacter(players.get(i));
+            players.get(i).setPosition(x, y);
     }
 
     public void addCharacter(Character character) {
@@ -62,7 +70,7 @@ public class Board {
         return box != null && box.isWalkable();
     }
 
-    public void movePlayer(int newX, int newY) {
+    public void movePlayer(Character player, int newX, int newY) {
         if (isMoveValid(newX, newY)) {
             Box currentBox = getBox(player.getX(), player.getY());
             if (currentBox != null) {
@@ -73,14 +81,15 @@ public class Board {
             if (newBox != null) {
                 newBox.setCharacter(player);
                 player.setPosition(newX, newY);
-                collectKey(newBox);
+                collectKey(player, newBox);
             }
         }
     }
 
-    private void collectKey(Box box) {
+    private void collectKey(Character player, Box box) {
         if (box.hasKey() && box.getKey().canBePickedBy(player)) {
             collectedKeys.add(box.getKey());
+            player.pickUpKey(); // Decimos que el jugador tiene la llave
             System.out.println("Llave recogida: " + box.getKey().getClass().getSimpleName());
 
             box.removeKey();
@@ -138,13 +147,7 @@ public class Board {
         return collectedKeys;
     }
 
-    public Character getPlayer() {
-        return player;
-    }
-
-    public void setPlayer(Character player) {
-        this.player = player;
-    }
+    public List<Character> getPlayers() {return players; }
 
     public Door getDoor() {
         return door;
@@ -153,4 +156,5 @@ public class Board {
     public List<Character> getCharacters() {
         return characters;
     }
+
 }

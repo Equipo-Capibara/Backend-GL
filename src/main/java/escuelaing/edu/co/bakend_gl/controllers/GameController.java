@@ -15,11 +15,10 @@ public class GameController {
     }
 
     @PostMapping("/move")
-    public ResponseEntity<Board> movePlayer(@RequestParam String direction) {
-        gameService.movePlayer(direction);
+    public ResponseEntity<Board> movePlayer(@RequestParam String direction, @RequestParam String playerId) {
+        gameService.movePlayer(playerId, direction);
         return ResponseEntity.ok(gameService.getBoard());
     }
-
 
     @GetMapping("/state")
     @ResponseBody
@@ -27,9 +26,19 @@ public class GameController {
         return gameService.getBoard();
     }
 
+
+    @PostMapping("/createBlock")
+    public void createBlock(@RequestParam String playerId){
+        gameService.createBlock(playerId);
+    }
+
+    @PostMapping("/destroyBlock")
+    public void destroyBlock(@RequestParam String playerId){
+        gameService.destroyBlock(playerId);
+    }
+
     @GetMapping("/switch-level")
     public void switchLevel(@RequestParam int level) {
         gameService.switchLevel(level);
     }
-
 }

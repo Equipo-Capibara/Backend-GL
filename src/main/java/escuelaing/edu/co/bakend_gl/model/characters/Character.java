@@ -3,11 +3,16 @@ package escuelaing.edu.co.bakend_gl.model.characters;
 public abstract class Character {
     protected int x, y;
     protected String element;
+    protected String id;
+    protected String directionView; // s - abajo, w - arriba, a - izq, d - der
+    protected boolean hasKey;
 
-    public Character(int x, int y, String element) {
+    public Character(String id, int x, int y, String element) {
+        this.id = id;
         this.x = x;
         this.y = y;
         this.element = element;
+        this.directionView = "s";
     }
 
     public int getX() { return x; }
@@ -20,4 +25,16 @@ public abstract class Character {
     }
 
     public abstract void useAbility();
+
+    public void setDirectionView(String directionView){this.directionView = directionView;}
+
+    public String getDirectionView(){return this.directionView;}
+
+    public String getId(){return this.id; }
+
+    public boolean isHasKey(){return this.hasKey; }
+
+    public void pickUpKey(){this.hasKey = true; }
+
+
 }
