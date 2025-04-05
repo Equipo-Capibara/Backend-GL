@@ -21,7 +21,7 @@ public class Box {
     }
 
     public boolean isWalkable() {
-        return block == null && (door == null || !door.isLocked());
+        return block == null && (door == null || !door.isLocked()) && character == null;
     }
 
     public int getX() {

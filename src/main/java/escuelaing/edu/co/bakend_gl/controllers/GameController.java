@@ -2,7 +2,6 @@ package escuelaing.edu.co.bakend_gl.controllers;
 
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.services.GameService;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,8 +15,9 @@ public class GameController {
     }
 
     @PostMapping("/move")
-    public void movePlayer(@RequestParam String playerId, @RequestParam String direction) {
+    public ResponseEntity<Board> movePlayer(@RequestParam String direction, @RequestParam String playerId) {
         gameService.movePlayer(playerId, direction);
+        return ResponseEntity.ok(gameService.getBoard());
     }
 
     @GetMapping("/state")
@@ -25,6 +25,7 @@ public class GameController {
     public Board getGameState() {
         return gameService.getBoard();
     }
+
 
     @PostMapping("/createBlock")
     public void createBlock(@RequestParam String playerId){
@@ -36,5 +37,8 @@ public class GameController {
         gameService.destroyBlock(playerId);
     }
 
-
+    @GetMapping("/switch-level")
+    public void switchLevel(@RequestParam int level) {
+        gameService.switchLevel(level);
+    }
 }
