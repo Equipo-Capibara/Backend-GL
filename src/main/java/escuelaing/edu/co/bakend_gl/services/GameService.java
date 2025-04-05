@@ -111,6 +111,54 @@ public class GameService {
         }
     }
 
+    public void destroyBlock(String playerId) {
+        Character player = players.stream()
+                .filter(p -> p.getId().equals(playerId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Jugador no encontrado"));
+
+        int x = player.getX();
+        int y = player.getY();
+
+        // Moverse en la dirección en la que está mirando el jugador
+        switch (player.getDirectionView()) {
+            case "w": y--; break;
+            case "s": y++; break;
+            case "a": x--; break;
+            case "d": x++; break;
+        }
+
+        String key = x + "," + y;
+        locks.putIfAbsent(key, new Object());
+
+        synchronized (locks.get(key)) {
+            Block initialBlock = board.getBox(x, y).getBlock();
+            if (initialBlock == null || !initialBlock.isDestructible() || !initialBlock.getAllowedCharacter().equals(player.getClass().getSimpleName())) {
+                return; // No hay bloque, no es destructible o el jugador no puede destruirlo
+            }
+
+            String blockType = initialBlock.getType();
+
+            // Recorremos en la dirección hasta encontrar un bloque distinto o vacío
+            while (board.getBox(x, y) != null && board.getBox(x, y).getBlock() != null &&
+                    board.getBox(x, y).getBlock().getType().equals(blockType)) {
+
+                board.removeBlock(x, y);
+
+                switch (player.getDirectionView()) {
+                    case "w": y--; break;
+                    case "s": y++; break;
+                    case "a": x--; break;
+                    case "d": x++; break;
+                }
+
+                key = x + "," + y;
+                locks.putIfAbsent(key, new Object());
+            }
+        }
+    }
+
+
     public Board getBoard() {
         return board;
     }
