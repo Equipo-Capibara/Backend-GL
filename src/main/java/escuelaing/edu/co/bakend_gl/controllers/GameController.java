@@ -39,6 +39,7 @@ public class GameController {
         System.out.println(newPlayer.getName());
         System.out.println(newPlayer.getId());
         return ResponseEntity.ok(newPlayer);
+    }
 
     @GetMapping("/switch-level")
     public void switchLevel(@RequestParam int level) {
