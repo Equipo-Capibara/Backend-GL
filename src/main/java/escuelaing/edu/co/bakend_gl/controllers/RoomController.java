@@ -2,83 +2,123 @@ package escuelaing.edu.co.bakend_gl.controllers;
 
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
+import escuelaing.edu.co.bakend_gl.services.PlayerService;
 import escuelaing.edu.co.bakend_gl.services.RoomService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.messaging.handler.annotation.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import java.util.*;
 
-import java.util.HashMap;
-import java.util.Map;
 
-@RestController
+@Controller
 @RequestMapping("/api/room")
+@ResponseBody
 public class RoomController {
 
     private final RoomService roomService;
+    private final PlayerService playerService;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
-    public RoomController(RoomService roomService) {
+    public RoomController(RoomService roomService, PlayerService playerService) {
         this.roomService = roomService;
+        this.playerService = playerService;
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Room> createRoom(@RequestBody String hostId) {
+    public ResponseEntity<Room> createRoom(@RequestBody Map<String, String> data) {
+        String hostId = data.get("hostId");
         Room room = roomService.createRoom(hostId);
         return new ResponseEntity<>(room, HttpStatus.CREATED);
     }
 
-    // Unirse a una sala
-    @MessageMapping("/joinRoom/{roomId}")
-    @SendTo("/topic/room/{roomId}/join-alert")
-    public Map<String, String> joinRoom(@DestinationVariable String roomId, @Payload Map<String, String> payload) {
-        System.out.println("📩 Nueva unión en la sala " + roomId);
+    @MessageMapping("/room/{roomId}/join")
+    public void joinRoom(@DestinationVariable String roomId, @Payload Map<String, Object> payload) {
+        String username = (String) payload.get("username");
+        String playerId = (String) payload.get("playerId");
 
-        Map<String, String> message = new HashMap<>();
-        message.put("username", payload.getOrDefault("username", "Jugador"));
-        message.put("avatarUrl", payload.getOrDefault("avatarUrl", "default-avatar.png")); // Imagen por defecto
+        System.out.println("Payload recibido: " + payload);
 
-        return message;
+        Room room = roomService.getRoom(roomId);
+        if (room != null && room.canJoin()) {
+            Optional<Player> existingPlayer = room.getPlayers().values().stream()
+                    .filter(p -> p.getId().equals(playerId))
+                    .findFirst();
+
+            Player player = playerService.getPlayerById(playerId).get();
+            roomService.joinRoom(roomId, player);
+            System.out.println(roomService.getPlayersInRoom(roomId));
+
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/join-alert",
+                    Map.of("username", username, "playerId", player.getId(), "joined", true));
+
+            // CAMBIO AQUÍ: topic específico para lista de jugadores
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/players",
+                    Map.of("players", roomService.getPlayersInRoom(roomId).values()));
+        }
     }
 
-    // Confirmar selección de personaje
     @MessageMapping("/confirmCharacterSelection")
-    @SendTo("/topic/room/{roomCode}")
-    public ResponseEntity<Object> confirmCharacterSelection(String roomCode, String playerId) {
-        boolean confirmed = roomService.confirmCharacterSelection(roomCode, playerId);
-        if (confirmed) {
-            return new ResponseEntity<>("Selección de personaje confirmada", HttpStatus.OK); // Respuesta con código 200 (OK)
-        } else {
-            return new ResponseEntity<>("Selección de personaje no confirmada", HttpStatus.BAD_REQUEST); // Respuesta con código 400 (Bad Request)
-        }
+    public void confirmCharacterSelection(@Payload Map<String, String> payload) {
+
+        System.out.println("Recibiendo mensaje de confirmación de selección...");
+        String roomCode = payload.get("roomCode");
+        String playerId = payload.get("playerId");
+        String characterId = payload.get("characterId");
+
+        // Verifica que los valores que recibes sean correctos
+        System.out.println("Recibiendo confirmación: roomCode=" + roomCode + ", playerId=" + playerId + ", characterId=" + characterId);
+
+        Boolean change = roomService.confirmCharacterSelection(roomCode, playerId);
+        System.out.println("Resultado de confirmación: " + change); // Verificar si el valor de 'change' es correcto
+
+        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/confirm", payload);
     }
 
-    // Iniciar el juego
     @MessageMapping("/startGame")
-    @SendTo("/topic/game/start/{roomCode}")
-    public ResponseEntity<String> startGame(String roomCode) {
+    public void startGame(@Payload Map<String, String> payload) {
+        String roomCode = payload.get("roomCode");
         boolean started = roomService.startGame(roomCode);
-        if (started) {
-            return new ResponseEntity<>("El juego ha comenzado", HttpStatus.OK); // Respuesta con código 200 (OK)
-        } else {
-            return new ResponseEntity<>("No se pudo iniciar el juego", HttpStatus.BAD_REQUEST); // Respuesta con código 400 (Bad Request)
-        }
+        messagingTemplate.convertAndSend("/topic/game/start/" + roomCode,
+                Map.of("message", started ? "El juego ha comenzado" : "No se pudo iniciar el juego"));
     }
 
-    // Eliminar un jugador
     @MessageMapping("/removePlayer")
-    @SendTo("/topic/room/{roomCode}")
-    public ResponseEntity<Object> removePlayer(String roomCode, String playerId) {
+    public void removePlayer(@Payload Map<String, String> payload) {
+        String roomCode = payload.get("roomCode");
+        String playerId = payload.get("playerId");
         boolean removed = roomService.removePlayer(roomCode, playerId);
-        if (removed) {
-            return new ResponseEntity<>("Jugador eliminado", HttpStatus.OK); // Respuesta con código 200 (OK)
-        } else {
-            return new ResponseEntity<>("No se pudo eliminar al jugador", HttpStatus.BAD_REQUEST); // Respuesta con código 400 (Bad Request)
+        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/player-removed",
+                Map.of("playerId", playerId, "success", removed));
+    }
+
+    @MessageMapping("/reconnect/{roomId}")
+    public void handleReconnection(@DestinationVariable String roomId, @Payload Map<String, String> payload) {
+        String playerId = payload.get("playerId");
+        Room room = roomService.getRoom(roomId);
+        boolean isStillInRoom = room != null && room.getPlayers().containsKey(playerId);
+        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/reconnection",
+                Map.of("playerId", playerId, "inRoom", isStillInRoom));
+    }
+
+    @MessageMapping("/room/{roomId}/character-select")
+    public void handleCharacterSelect(@DestinationVariable String roomId, @Payload Map<String, Object> payload) {
+        String playerId = (String) payload.get("playerId");
+        String newCharacter = String.valueOf(payload.get("character")); // ID del nuevo personaje
+
+        Room room = roomService.getRoom(roomId);
+        if (room != null && room.getPlayers().containsKey(playerId)) {
+            Player player = room.getPlayers().get(playerId);
+            player.setCharacter(newCharacter);
+            room.getPlayers().put(playerId, player);
+            roomService.saveRoom(room);
+
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/character-select",
+                    Map.of("players", room.getPlayers().values()));
         }
     }
 }

@@ -10,10 +10,11 @@ public class Room {
 
     @Id
     private String id;
+
     private String code;
     private String hostId;
     private boolean gameStarted;
-    private Map<String, Player> players = new HashMap<>();  // Usar un Map en lugar de un Set
+    private Map<String, Player> players = new HashMap<>();
 
     public Room() {}
 
@@ -23,8 +24,8 @@ public class Room {
         this.gameStarted = false;
     }
 
-    public String getCode() {
-        return code;
+    private String generateRoomCode() {
+        return UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
 
     public boolean canJoin() {
@@ -32,38 +33,47 @@ public class Room {
     }
 
     public void addPlayer(Player player) {
-        players.put(player.getId(), player);  // Usamos put en lugar de add
+        players.put(player.getId(), player);
     }
 
-    private String generateRoomCode() {
-        return UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-    }
-
-    public Collection<Player> getPlayers() {
-        return players.values();  // Retorna los jugadores como una colección
+    public void removePlayer(String playerId) {
+        players.remove(playerId);
     }
 
     public boolean confirmCharacterSelection(String playerId) {
-        Player player = players.get(playerId);  // Usamos get para acceder al jugador por su playerId
+        Player player = players.get(playerId);
         if (player != null) {
-            player.setCharacterSelected(true);  // Asumiendo que Player tiene un campo `characterSelected`
+            player.setCharacterSelected(true);
             return true;
         }
         return false;
     }
 
-    // Iniciar la partida si todos los jugadores confirmaron
     public boolean allPlayersConfirmed() {
-        return players.values().stream().allMatch(Player::isCharacterSelected);  // Verifica si todos los jugadores han seleccionado personaje
+        return players.values().stream().allMatch(Player::isCharacterSelected);
     }
 
-    // Iniciar el juego
     public void startGame() {
         gameStarted = true;
     }
 
-    // Eliminar jugador de la sala
-    public void removePlayer(String playerId) {
-        players.remove(playerId);
+    public String getCode() {
+        return code;
+    }
+
+    public Map<String, Player> getPlayers() {
+        return players;
+    }
+
+    public boolean isGameStarted() {
+        return gameStarted;
+    }
+
+    public String getHostId() {
+        return hostId;
+    }
+
+    public void setHostId(String hostId) {
+        this.hostId = hostId;
     }
 }
