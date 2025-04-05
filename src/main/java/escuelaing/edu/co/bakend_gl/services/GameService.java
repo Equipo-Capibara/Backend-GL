@@ -3,6 +3,7 @@ package escuelaing.edu.co.bakend_gl.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.blocks.*;
+import escuelaing.edu.co.bakend_gl.model.board.Box;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
@@ -96,13 +97,46 @@ public class GameService {
         int newY = player.getY();
 
         switch (direction.toLowerCase()) {
-            case "w": newY--; break;
-            case "s": newY++; break;
-            case "a": newX--; break;
-            case "d": newX++; break;
+            case "w":
+                newY--; player.setDirection("w"); break;
+            case "s":
+                newY++; player.setDirection("s"); break;
+            case "a":
+                newX--; player.setDirection("a"); break;
+            case "d":
+                newX++; player.setDirection("d"); break;
         }
         board.movePlayer(newX, newY);
     }
+
+    public void buildBlocks() {
+        String direction = player.getDirection();
+        int dx = 0, dy = 0;
+        switch (direction.toLowerCase()) {
+            case "w": dy = -1; break;
+            case "s": dy = 1; break;
+            case "a": dx = -1; break;
+            case "d": dx = 1; break;
+            default: return; // dirección inválida
+        }
+
+        int x = player.getX();
+        int y = player.getY();
+
+        while (true) {
+            x += dx;
+            y += dy;
+
+            Box box = board.getBox(x, y);
+            if (box == null || box.getBlock() != null || box.getCharacter() != null) {
+                break; // se salió del mapa o encontró obstáculo o personaje
+            }
+
+            Block newBlock = new BlockFire(x, y);
+            board.addBlock(newBlock);
+        }
+    }
+
 
     public void useAbility() {
         player.useAbility();
