@@ -53,11 +53,10 @@ public class RoomService {
     }
 
     // Iniciar el juego
-    public boolean startGame(String roomCode) {
+    public boolean startGame(String roomCode, String requesterId) {
         Room room = roomRepository.findByCode(roomCode);
-        if (room != null && room.allPlayersConfirmed()) {
+        if (room != null && room.getHostId().equals(requesterId) && room.allPlayersConfirmed() && !room.isGameStarted()) {
             room.startGame();
-            // Guardar cambios en la base de datos
             roomRepository.save(room);
             return true;
         }

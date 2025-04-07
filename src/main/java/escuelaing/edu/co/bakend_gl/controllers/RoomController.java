@@ -73,18 +73,11 @@ public class RoomController {
         // Verifica que los valores que recibes sean correctos
         System.out.println("Recibiendo confirmación: roomCode=" + roomCode + ", playerId=" + playerId + ", characterId=" + characterId);
 
-        Boolean change = roomService.confirmCharacterSelection(roomCode, playerId);
-        System.out.println("Resultado de confirmación: " + change); // Verificar si el valor de 'change' es correcto
+        Boolean roomConfirm = roomService.confirmCharacterSelection(roomCode, playerId);
+        System.out.println("estado" + roomConfirm);
 
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/confirm", payload);
-    }
-
-    @MessageMapping("/startGame")
-    public void startGame(@Payload Map<String, String> payload) {
-        String roomCode = payload.get("roomCode");
-        boolean started = roomService.startGame(roomCode);
-        messagingTemplate.convertAndSend("/topic/game/start/" + roomCode,
-                Map.of("message", started ? "El juego ha comenzado" : "No se pudo iniciar el juego"));
+        Collection<Player> players = roomService.getPlayersInRoom(roomCode).values();
+        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/confirm", players);
     }
 
     @MessageMapping("/removePlayer")
@@ -119,6 +112,17 @@ public class RoomController {
 
             messagingTemplate.convertAndSend("/topic/room/" + roomId + "/character-select",
                     Map.of("players", room.getPlayers().values()));
+        }
+    }
+
+    @MessageMapping("/room/{roomCode}/start")
+    public void startGame(String userId, @DestinationVariable String roomCode) {
+        boolean started = roomService.startGame(roomCode, userId);
+        if (started) {
+            messagingTemplate.convertAndSend(
+                    "/topic/room/" + roomCode + "/game-start",
+                    "{\"type\":\"START_GAME\"}"
+            );
         }
     }
 }
