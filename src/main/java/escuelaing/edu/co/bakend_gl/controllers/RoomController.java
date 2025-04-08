@@ -115,14 +115,29 @@ public class RoomController {
         }
     }
 
-    @MessageMapping("/room/{roomCode}/start")
-    public void startGame(String userId, @DestinationVariable String roomCode) {
-        boolean started = roomService.startGame(roomCode, userId);
-        if (started) {
-            messagingTemplate.convertAndSend(
-                    "/topic/room/" + roomCode + "/game-start",
-                    "{\"type\":\"START_GAME\"}"
-            );
+    @MessageMapping("/room/{roomId}/start")
+    public void startGame(String messageBody, @org.springframework.messaging.handler.annotation.DestinationVariable String roomId) {
+        try {
+            // Suponiendo que el mensaje contiene el roomId y los jugadores seleccionados (ya registrados en el Room)
+            Room room = roomService.getRoom(roomId);
+            if (room != null && roomService.startGame(roomId, room.getHostId())) {
+
+                // Crear un estado inicial del juego (ejemplo simplificado)
+                Map<String, Object> gameState = Map.of(
+                        "players", room.getPlayers(),
+                        "status", "started",
+                        "roomId", roomId
+                );
+
+                // Enviar mensaje a todos los suscritos al tópico de esta sala
+                messagingTemplate.convertAndSend(
+                        "/topic/room/" + roomId + "/start",
+                        Map.of("gameState", gameState)
+                );
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
