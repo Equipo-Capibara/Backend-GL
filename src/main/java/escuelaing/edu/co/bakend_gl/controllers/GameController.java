@@ -6,28 +6,35 @@ import escuelaing.edu.co.bakend_gl.services.GameService;
 import escuelaing.edu.co.bakend_gl.services.PlayerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import escuelaing.edu.co.bakend_gl.services.RoomService;
+import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
+
+import java.util.ArrayList;
+
 
 @RestController
 @RequestMapping("/game")
 public class GameController {
     private final GameService gameService;
     private final PlayerService playerService;
+    private final RoomService roomService;
 
-    public GameController(GameService gameService, PlayerService playerService) {
+    public GameController(GameService gameService, PlayerService playerService, RoomService roomService) {
         this.gameService = gameService;
         this.playerService = playerService;
+        this.roomService = roomService;
     }
 
     @PostMapping("/move")
-    public ResponseEntity<Board> movePlayer(@RequestParam String direction) {
-        gameService.movePlayer(direction);
-        return ResponseEntity.ok(gameService.getBoard());
+    public ResponseEntity<Board> movePlayer(@RequestParam String roomCode, @RequestParam String playerId, @RequestParam String direction) {
+        gameService.movePlayer(roomCode, playerId, direction);
+        return ResponseEntity.ok(gameService.getBoard(roomCode));
     }
 
     @GetMapping("/state")
     @ResponseBody
-    public Board getGameState() {
-        return gameService.getBoard();
+    public Board getGameState(@RequestParam String roomCode) {
+        return gameService.getBoard(roomCode);
     }
 
     @PostMapping("/createPlayer")
@@ -45,15 +52,33 @@ public class GameController {
 
     // Nuevo endpoint para construir bloque
     @PostMapping("/build")
-    public ResponseEntity<Board> buildBlock() {
-        gameService.buildBlocks();
-        return ResponseEntity.ok(gameService.getBoard());
+    public ResponseEntity<Board> buildBlock(@RequestParam String roomCode, @RequestParam String playerId) {
+        gameService.buildBlocks(roomCode, playerId);
+        return ResponseEntity.ok(gameService.getBoard(roomCode));
     }
 
     @PostMapping("/destroy")
-    public ResponseEntity<Board> destroyBlock() {
-        gameService.destroyBlock();
-        return ResponseEntity.ok(gameService.getBoard());
+    public ResponseEntity<Board> destroyBlock(@RequestParam String roomCode, @RequestParam String playerId) {
+        gameService.destroyBlock(roomCode, playerId);
+        return ResponseEntity.ok(gameService.getBoard(roomCode));
     }
+
+    @PostMapping("/start")
+    public ResponseEntity<String> startGame(@RequestParam String roomCode, @RequestParam String requesterId) {
+        boolean started = roomService.startGame(roomCode, requesterId);
+
+        if (started) {
+            // Obtener los jugadores actuales de la sala
+            Room room = roomService.getRoom(roomCode);
+            gameService.initializeGameForRoom(roomCode, new ArrayList<>(room.getPlayers().values()));
+
+            return ResponseEntity.ok("Game started");
+        } else {
+            return ResponseEntity
+                    .badRequest()
+                    .body("No se puede iniciar el juego");
+        }
+    }
+
 
 }

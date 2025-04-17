@@ -12,14 +12,12 @@ public class Board {
     private int height;
     private Box[][] grid;
     private List<Key> collectedKeys;
-    private Character player;
     private List<Character> characters;  // NUEVA LISTA
     private Door door;
 
-    public Board(int width, int height, Character player) {
+    public Board(int width, int height) {
         this.width = width;
         this.height = height;
-        this.player = player;
         this.collectedKeys = new ArrayList<>();
         this.characters = new ArrayList<>(); // INICIALIZACIÓN
         this.grid = new Box[width][height];
@@ -31,10 +29,6 @@ public class Board {
                 grid[i][j] = new Box(i, j);
             }
         }
-
-        // Ubicar al jugador principal
-        grid[player.getX()][player.getY()].setCharacter(player);
-        characters.add(player);
     }
 
     public void addCharacter(Character character) {
@@ -62,7 +56,7 @@ public class Board {
         return box != null && box.isWalkable();
     }
 
-    public void movePlayer(int newX, int newY) {
+    public void movePlayer(Character player, int newX, int newY) {
         if (isMoveValid(newX, newY)) {
             Box currentBox = getBox(player.getX(), player.getY());
             if (currentBox != null) {
@@ -73,12 +67,12 @@ public class Board {
             if (newBox != null) {
                 newBox.setCharacter(player);
                 player.setPosition(newX, newY);
-                collectKey(newBox);
+                collectKey(newBox, player);
             }
         }
     }
 
-    private void collectKey(Box box) {
+    private void collectKey(Box box, Character player) {
         if (box.hasKey() && box.getKey().canBePickedBy(player)) {
             collectedKeys.add(box.getKey());
             System.out.println("Llave recogida: " + box.getKey().getClass().getSimpleName());
@@ -138,19 +132,7 @@ public class Board {
         return collectedKeys;
     }
 
-    public Character getPlayer() {
-        return player;
-    }
+    public Door getDoor() { return door; }
 
-    public void setPlayer(Character player) {
-        this.player = player;
-    }
-
-    public Door getDoor() {
-        return door;
-    }
-
-    public List<Character> getCharacters() {
-        return characters;
-    }
+    public List<Character> getCharacters() { return characters; }
 }

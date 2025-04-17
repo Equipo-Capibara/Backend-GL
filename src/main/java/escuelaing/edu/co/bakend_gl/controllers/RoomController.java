@@ -2,6 +2,7 @@ package escuelaing.edu.co.bakend_gl.controllers;
 
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
+import escuelaing.edu.co.bakend_gl.model.characters.CharacterType;
 import escuelaing.edu.co.bakend_gl.services.PlayerService;
 import escuelaing.edu.co.bakend_gl.services.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,17 +102,20 @@ public class RoomController {
     @MessageMapping("/room/{roomId}/character-select")
     public void handleCharacterSelect(@DestinationVariable String roomId, @Payload Map<String, Object> payload) {
         String playerId = (String) payload.get("playerId");
-        String newCharacter = String.valueOf(payload.get("character")); // ID del nuevo personaje
-
+        String characterIdStr = String.valueOf(payload.get("character")); // ID del nuevo personaje
         Room room = roomService.getRoom(roomId);
+
         if (room != null && room.getPlayers().containsKey(playerId)) {
             Player player = room.getPlayers().get(playerId);
-            player.setCharacter(newCharacter);
-            room.getPlayers().put(playerId, player);
-            roomService.saveRoom(room);
+            CharacterType type = mapNumberToCharacterType(characterIdStr);
 
-            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/character-select",
-                    Map.of("players", room.getPlayers().values()));
+            if(type != null){
+                player.setCharacter(type);
+                room.getPlayers().put(playerId, player);
+                roomService.saveRoom(room);
+                messagingTemplate.convertAndSend("/topic/room/" + roomId + "/character-select",
+                        Map.of("players", room.getPlayers().values()));
+            }
         }
     }
 
@@ -140,4 +144,15 @@ public class RoomController {
             e.printStackTrace();
         }
     }
+
+    private CharacterType mapNumberToCharacterType(String characterIdStr) {
+        switch (characterIdStr) {
+            case "1": return CharacterType.FLAME;
+            case "2": return CharacterType.AQUA;
+            case "3": return CharacterType.BRISA;
+            case "4": return CharacterType.STONE;
+            default: return null; // O puedes lanzar una excepción si prefieres
+        }
+    }
+
 }

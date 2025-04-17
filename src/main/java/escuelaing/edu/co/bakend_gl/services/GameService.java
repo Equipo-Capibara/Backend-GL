@@ -1,45 +1,78 @@
 package escuelaing.edu.co.bakend_gl.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.blocks.*;
 import escuelaing.edu.co.bakend_gl.model.board.Box;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
+import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GameService {
-    private Board board;
-    private Character player;
+
     private int currentLevel = 1;
+    private Map<String, Board> boardsByRoom = new ConcurrentHashMap<>();
+    private Map<String, Character> characterByPlayerId = new ConcurrentHashMap<>();
+
+    private final Map<String, Object> roomLocks = new ConcurrentHashMap<>();
+
 
     public GameService() {
-        loadLevel(currentLevel);
+        // Nada que inicializar al arranque
     }
 
-    private void loadLevel(int level) {
-        switch (level) {
-            case 1:
-                setupLevel1();
-                break;
-            case 2:
-                setupLevel2();
-                break;
-            default:
-                throw new IllegalArgumentException("Nivel no válido.");
+    public void initializeGameForRoom(String roomCode, List<Player> players) {
+        Board board = setupLevel(currentLevel);
+
+        // Asignar posiciones iniciales a los personajes
+        int[][] spawnPoints = {
+                {1, 1}, {18, 1}, {1, 10}, {18, 10}
+        };
+
+        for (int i = 0; i < players.size() && i < spawnPoints.length; i++) {
+            Player player = players.get(i);
+            int x = spawnPoints[i][0];
+            int y = spawnPoints[i][1];
+
+            Character character = createCharacterFromType(player.getCharacter(), x, y);
+            if (character != null) {
+                board.addCharacter(character);
+                characterByPlayerId.put(player.getId(), character);
+            }
+        }
+
+        boardsByRoom.put(roomCode, board);
+        roomLocks.put(roomCode, new Object()); // Lock para esa sala
+    }
+
+    private Character createCharacterFromType(CharacterType type, int x, int y) {
+        switch (type) {
+            case FLAME: return new Flame(x, y);
+            case AQUA: return new Aqua(x, y);
+            case BRISA: return new Brisa(x, y);
+            case STONE: return new Stone(x, y);
+            default: return null;
         }
     }
 
-    private void setupLevel1() {
-        player = new Flame(1, 1); // esquina superior izquierda
-        board = new Board(20, 12, player);
-        createBorders();
 
-        board.addCharacter(new Aqua(18, 1));  // ya no está encima del borde
-        board.addCharacter(new Brisa(1, 10));
-        board.addCharacter(new Stone(18, 10));
+    private Board setupLevel(int level) {
+        switch (level) {
+            case 1: return setupLevel1();
+            case 2: return setupLevel2();
+            default: throw new IllegalArgumentException("Nivel no válido.");
+        }
+    }
+
+    private Board setupLevel1() {
+        Board board = new Board(20, 12);
+        createBorders(board);
 
         // Llaves
         board.getBox(3, 2).setKey(new KeyFlame(3, 2));
@@ -55,136 +88,173 @@ public class GameService {
         board.addBlock(new BlockIron(10, 4));
         board.addBlock(new BlockIron(10, 5));
 
-        board.placeDoor(10, 6); // Puerta al centro-ish
+        board.placeDoor(10, 6);
+
+        return board;
     }
 
-    private void setupLevel2() {
-        player = new Aqua(1, 1);
-        board = new Board(20, 12, player);
-        createBorders();
+    private Board setupLevel2() {
+        Board board = new Board(20, 12);
+        createBorders(board);
 
-        board.addCharacter(new Flame(18, 1));
-        board.addCharacter(new Brisa(1, 10));
-        board.addCharacter(new Stone(18, 10));
-
-        // Llaves en otras posiciones
         board.getBox(2, 2).setKey(new KeyAqua(2, 2));
         board.getBox(8, 8).setKey(new KeyBrisa(8, 8));
         board.getBox(5, 6).setKey(new KeyFlame(5, 6));
         board.getBox(16, 10).setKey(new KeyStone(16, 10));
 
-        // Obstáculos distintos
         for (int x = 5; x <= 15; x++) {
             board.addBlock(new BlockIron(x, 5));
         }
 
         board.placeDoor(10, 6);
+
+        return board;
     }
 
-    private void createBorders() {
+    private void createBorders(Board board) {
         for (int x = 0; x < 20; x++) {
-            board.addBlock(new BlockIron(x, 0));              // arriba
-            board.addBlock(new BlockIron(x, 11));             // abajo
+            board.addBlock(new BlockIron(x, 0));
+            board.addBlock(new BlockIron(x, 11));
         }
         for (int y = 0; y < 12; y++) {
-            board.addBlock(new BlockIron(0, y));              // izquierda
-            board.addBlock(new BlockIron(19, y));             // derecha
+            board.addBlock(new BlockIron(0, y));
+            board.addBlock(new BlockIron(19, y));
         }
     }
 
-    public void movePlayer(String direction) {
-        int newX = player.getX();
-        int newY = player.getY();
+    public void movePlayer(String roomCode, String playerId, String direction) {
+        Board board = boardsByRoom.get(roomCode);
+        Character player = characterByPlayerId.get(playerId);
+        Object lock = roomLocks.get(roomCode);
 
-        switch (direction.toLowerCase()) {
-            case "w":
-                newY--; player.setDirection("w"); break;
-            case "s":
-                newY++; player.setDirection("s"); break;
-            case "a":
-                newX--; player.setDirection("a"); break;
-            case "d":
-                newX++; player.setDirection("d"); break;
-        }
-        board.movePlayer(newX, newY);
-    }
+        if (board == null || player == null) return;
 
-    public void buildBlocks() {
-        String direction = player.getDirection();
-        int dx = 0, dy = 0;
-        switch (direction.toLowerCase()) {
-            case "w": dy = -1; break;
-            case "s": dy = 1; break;
-            case "a": dx = -1; break;
-            case "d": dx = 1; break;
-            default: return; // dirección inválida
-        }
+        synchronized (lock) {
+            int newX = player.getX();
+            int newY = player.getY();
 
-        int x = player.getX();
-        int y = player.getY();
-
-        while (true) {
-            x += dx;
-            y += dy;
-
-            Box box = board.getBox(x, y);
-            if (box == null || box.getBlock() != null || box.getCharacter() != null) {
-                break; // se salió del mapa o encontró obstáculo o personaje
+            switch (direction.toLowerCase()) {
+                case "w": newY--; player.setDirection("w"); break;
+                case "s": newY++; player.setDirection("s"); break;
+                case "a": newX--; player.setDirection("a"); break;
+                case "d": newX++; player.setDirection("d"); break;
             }
 
-            Block newBlock = new BlockFire(x, y);
-            board.addBlock(newBlock);
+            board.movePlayer(player, newX, newY);
         }
     }
 
-    public void destroyBlock() {
-        String direction = player.getDirection();
-        int dx = 0, dy = 0;
+    public void buildBlocks(String roomCode, String playerId) {
+        Board board = boardsByRoom.get(roomCode);
+        Character player = characterByPlayerId.get(playerId);
+        Object lock = roomLocks.get(roomCode);
 
-        switch (direction.toLowerCase()) {
-            case "w": dy = -1; break;
-            case "s": dy = 1; break;
-            case "a": dx = -1; break;
-            case "d": dx = 1; break;
-            default: return; // dirección inválida
-        }
+        if (board == null || player == null) return;
 
-        int x = player.getX();
-        int y = player.getY();
-
-        while (true) {
-            x += dx;
-            y += dy;
-
-            Box box = board.getBox(x, y);
-            if (box == null) {
-                break; // fuera del mapa
+        synchronized (lock) {
+            int dx = 0, dy = 0;
+            switch (player.getDirection().toLowerCase()) {
+                case "w": dy = -1; break;
+                case "s": dy = 1; break;
+                case "a": dx = -1; break;
+                case "d": dx = 1; break;
+                default: return;
             }
 
-            if (box.getCharacter() != null) {
-                break; // hay un personaje, no se destruye nada
-            }
+            int x = player.getX();
+            int y = player.getY();
+            String elementBlock = player.getElement();
 
-            if (box.getBlock() != null) {
-                board.removeBlock(x, y); // método que debes tener para quitar el bloque
-                break; // solo se destruye el primero que encuentra
+            while (true) {
+                x += dx;
+                y += dy;
+
+                Box box = board.getBox(x, y);
+                if (box == null) break;
+
+                synchronized (box) {
+                    if (box.getBlock() != null || box.getCharacter() != null) break;
+
+                    switch (elementBlock) {
+                        case "Flame": board.addBlock(new BlockFire(x, y)); break;
+                        case "Aqua": board.addBlock(new BlockWater(x, y)); break;
+                        case "Stone": board.addBlock(new BlockEarth(x, y)); break;
+                        case "Brisa": board.addBlock(new BlockAir(x, y)); break;
+                    }
+                }
             }
         }
     }
 
+    public void destroyBlock(String roomCode, String playerId) {
+        Board board = boardsByRoom.get(roomCode);
+        Character player = characterByPlayerId.get(playerId);
+        Object lock = roomLocks.get(roomCode);
 
+        if (board == null || player == null) return;
 
+        synchronized (lock) {
+            int dx = 0, dy = 0;
+            switch (player.getDirection().toLowerCase()) {
+                case "w": dy = -1; break;
+                case "s": dy = 1; break;
+                case "a": dx = -1; break;
+                case "d": dx = 1; break;
+                default: return;
+            }
 
-    public void useAbility() {
-        player.useAbility();
+            int x = player.getX();
+            int y = player.getY();
+            String elementBlock = player.getElement();
+
+            while (true) {
+                x += dx;
+                y += dy;
+
+                Box box = board.getBox(x, y);
+                if (box == null) break;
+
+                synchronized (box) {
+                    if (box.getCharacter() != null) break;
+
+                    Block block = box.getBlock();
+                    if (block != null) {
+                        if (isBlockOfPlayerElement(elementBlock, block)) {
+                            board.removeBlock(x, y);
+                        } else {
+                            break; // Bloque de otro tipo
+                        }
+                    } else {
+                        break; // No hay más bloques
+                    }
+                }
+            }
+        }
     }
 
-    public Board getBoard() {
-        return board;
+    private boolean isBlockOfPlayerElement (String elementBlock, Block block) {
+        switch (elementBlock) {
+            case "Flame": return block instanceof BlockFire;
+            case "Aqua": return block instanceof BlockWater;
+            case "Stone": return block instanceof BlockEarth;
+            case "Brisa": return block instanceof BlockAir;
+            default: return false;
+        }
+    }
+
+
+    public void useAbility(String roomCode, String playerId) {
+        Character player = characterByPlayerId.get(playerId);
+        if (player != null) {
+            player.useAbility();
+        }
+    }
+
+    public Board getBoard(String roomCode) {
+        return boardsByRoom.get(roomCode);
     }
 
     public void switchLevel(int level) {
         currentLevel = level;
-        loadLevel(level);
     }
 }
