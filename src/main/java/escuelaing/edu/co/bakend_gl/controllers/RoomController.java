@@ -102,19 +102,30 @@ public class RoomController {
     @MessageMapping("/room/{roomId}/character-select")
     public void handleCharacterSelect(@DestinationVariable String roomId, @Payload Map<String, Object> payload) {
         String playerId = (String) payload.get("playerId");
-        String characterIdStr = String.valueOf(payload.get("character")); // ID del nuevo personaje
+        String characterIdStr = String.valueOf(payload.get("character")); // ID como "1", "2", etc.
         Room room = roomService.getRoom(roomId);
 
         if (room != null && room.getPlayers().containsKey(playerId)) {
             Player player = room.getPlayers().get(playerId);
             CharacterType type = mapNumberToCharacterType(characterIdStr);
 
-            if(type != null){
-                player.setCharacter(type);
+            if (type != null) {
+                player.setCharacter(type); // Esto ya actualiza idFront también
                 room.getPlayers().put(playerId, player);
                 roomService.saveRoom(room);
-                messagingTemplate.convertAndSend("/topic/room/" + roomId + "/character-select",
-                        Map.of("players", room.getPlayers().values()));
+
+                // ⚠️ Aquí está el cambio: transformamos lo que se envía
+                messagingTemplate.convertAndSend(
+                        "/topic/room/" + roomId + "/character-select",
+                        Map.of("players", room.getPlayers().values().stream().map(p -> {
+                            Map<String, Object> playerMap = new HashMap<>();
+                            playerMap.put("id", p.getId());
+                            playerMap.put("name", p.getName());
+                            playerMap.put("character", p.getIdFront()); // 💥 aquí el fix
+                            playerMap.put("characterSelected", p.isCharacterSelected());
+                            return playerMap;
+                        }).toList())
+                );
             }
         }
     }
@@ -136,7 +147,7 @@ public class RoomController {
                 // Enviar mensaje a todos los suscritos al tópico de esta sala
                 messagingTemplate.convertAndSend(
                         "/topic/room/" + roomId + "/start",
-                        Map.of("gameState", gameState)
+                        Map.of("players", room.getPlayers().values().stream().map(this::buildPlayerDTO).toList())
                 );
             }
 
@@ -146,13 +157,24 @@ public class RoomController {
     }
 
     private CharacterType mapNumberToCharacterType(String characterIdStr) {
-        switch (characterIdStr) {
-            case "1": return CharacterType.FLAME;
-            case "2": return CharacterType.AQUA;
-            case "3": return CharacterType.BRISA;
-            case "4": return CharacterType.STONE;
-            default: return null; // O puedes lanzar una excepción si prefieres
-        }
+        return switch (characterIdStr) {
+            case "1" -> CharacterType.FLAME;
+            case "2" -> CharacterType.AQUA;
+            case "3" -> CharacterType.BRISA;
+            case "4" -> CharacterType.STONE;
+            default -> null;
+        };
     }
+
+
+    private Map<String, Object> buildPlayerDTO(Player player) {
+        return Map.of(
+                "id", player.getId(),
+                "name", player.getName(),
+                "character", player.getIdFront(), // Aquí enviamos el ID como string
+                "characterSelected", player.isCharacterSelected()
+        );
+    }
+
 
 }
