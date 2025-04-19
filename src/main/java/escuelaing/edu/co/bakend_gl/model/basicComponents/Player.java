@@ -14,11 +14,9 @@ public class Player {
     private String name;
     private CharacterType character;
     private boolean characterSelected;
-    private String idFront;
 
     public Player() {}
 
-    // idFront
     // 1 - Flame
     // 2 - Aqua
     // 3 - Brisa
@@ -27,8 +25,7 @@ public class Player {
     public Player( String name) {
         this.id = UUID.randomUUID().toString();
         this.name = name;
-        this.character = CharacterType.FLAME;// Por defecto dejamos a Flame
-        this.idFront = "1";
+        this.character = CharacterType.FLAME; // Por defecto dejamos a Flame
         this.characterSelected = false;
     }
 
@@ -36,21 +33,9 @@ public class Player {
     public String getName() { return name; }
     public CharacterType getCharacter() { return character; }
     public boolean isCharacterSelected() { return characterSelected; }
-    public String getIdFront() { return idFront; }
 
     public void setId(String id) { this.id = id; }
     public void setName(String name) { this.name = name; }
-
-    public void setCharacter(CharacterType character) {
-        this.character = character;
-        // Sincronizamos automáticamente el idFront
-        switch (character) {
-            case FLAME -> this.idFront = "1";
-            case AQUA -> this.idFront = "2";
-            case BRISA -> this.idFront = "3";
-            case STONE -> this.idFront = "4";
-            default -> this.idFront = "0";
-        }
-    }
+    public void setCharacter(CharacterType character) { this.character = character; }
     public void setCharacterSelected(boolean selected) { this.characterSelected = selected; }
 }
