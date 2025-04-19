@@ -107,10 +107,10 @@ public class RoomController {
 
         if (room != null && room.getPlayers().containsKey(playerId)) {
             Player player = room.getPlayers().get(playerId);
-            CharacterType type = mapNumberToCharacterType(characterIdStr);
 
+            CharacterType type = mapNumberToCharacterType(characterIdStr);
             if(type != null){
-                player.setCharacter(type);
+                player.setCharacter(characterIdStr);
                 room.getPlayers().put(playerId, player);
                 roomService.saveRoom(room);
                 messagingTemplate.convertAndSend("/topic/room/" + roomId + "/character-select",

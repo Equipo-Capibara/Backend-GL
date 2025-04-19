@@ -40,7 +40,11 @@ public class GameService {
             int x = spawnPoints[i][0];
             int y = spawnPoints[i][1];
 
-            Character character = createCharacterFromType(player.getCharacter(), x, y);
+            //Character character = createCharacterFromType(player.getCharacter(), x, y);
+
+            CharacterType type = getCharacterTypeById(player.getCharacter());
+            Character character = createCharacterFromType(type, x, y);
+
             if (character != null) {
                 board.addCharacter(character);
                 characterByPlayerId.put(player.getId(), character);
@@ -49,6 +53,15 @@ public class GameService {
 
         boardsByRoom.put(roomCode, board);
         roomLocks.put(roomCode, new Object()); // Lock para esa sala
+    }
+
+    private CharacterType getCharacterTypeById(String id) {
+        for (CharacterType type : CharacterType.values()) {
+            if (type.getId().equals(id)) {
+                return type;
+            }
+        }
+        return CharacterType.FLAME; // Default en caso de error
     }
 
     private Character createCharacterFromType(CharacterType type, int x, int y) {
