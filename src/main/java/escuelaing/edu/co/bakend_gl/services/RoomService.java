@@ -55,13 +55,36 @@ public class RoomService {
     // Iniciar el juego
     public boolean startGame(String roomCode, String requesterId) {
         Room room = roomRepository.findByCode(roomCode);
-        if (room != null && room.getHostId().equals(requesterId) && room.allPlayersConfirmed() && !room.isGameStarted()) {
-            room.startGame();
-            roomRepository.save(room);
-            return true;
+        System.out.println("ROOM: " + room);
+        if (room == null) {
+            System.out.println("Sala no encontrada con roomCode: " + roomCode);
+            return false;
         }
-        return false;
+
+        System.out.println("Host de la sala: " + room.getHostId() + ", RequesterId: " + requesterId);
+        if (!room.getHostId().equals(requesterId)) {
+            System.out.println("El requester no es el host.");
+            return false;
+        }
+
+        System.out.println("¿Todos confirmaron?: " + room.allPlayersConfirmed());
+        if (!room.allPlayersConfirmed()) {
+            System.out.println("No todos los jugadores han confirmado.");
+            return false;
+        }
+
+        System.out.println("¿Juego ya iniciado?: " + room.isGameStarted());
+        if (room.isGameStarted()) {
+            System.out.println("El juego ya está iniciado.");
+            return false;
+        }
+
+        room.startGame();
+        roomRepository.save(room);
+        System.out.println("Juego iniciado con éxito.");
+        return true;
     }
+
 
     // Eliminar un jugador de la sala
     public boolean removePlayer(String roomCode, String playerId) {

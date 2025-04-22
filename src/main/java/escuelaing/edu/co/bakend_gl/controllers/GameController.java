@@ -40,7 +40,7 @@ public class GameController {
     @PostMapping("/createPlayer")
     public ResponseEntity<Player> createPlayer(@RequestParam String name) {
         Player newPlayer = playerService.createPlayer(name);
-        System.out.println(newPlayer.getName());
+        System.out.println(newPlayer.getName() + "Aca se esta usando el /createPlayer de GameController");
         System.out.println(newPlayer.getId());
         return ResponseEntity.ok(newPlayer);
     }
@@ -66,6 +66,7 @@ public class GameController {
     @PostMapping("/start")
     public ResponseEntity<String> startGame(@RequestParam String roomCode, @RequestParam String requesterId) {
         boolean started = roomService.startGame(roomCode, requesterId);
+        System.out.println("Room Code que recibe el Start Game en GameController: "+roomCode);
 
         if (started) {
             // Obtener los jugadores actuales de la sala

@@ -19,7 +19,6 @@ public class GameService {
     private int currentLevel = 1;
     private Map<String, Board> boardsByRoom = new ConcurrentHashMap<>();
     private Map<String, Character> characterByPlayerId = new ConcurrentHashMap<>();
-
     private final Map<String, Object> roomLocks = new ConcurrentHashMap<>();
 
 
@@ -40,8 +39,6 @@ public class GameService {
             int x = spawnPoints[i][0];
             int y = spawnPoints[i][1];
 
-            //Character character = createCharacterFromType(player.getCharacter(), x, y);
-
             CharacterType type = getCharacterTypeById(player.getCharacter());
             Character character = createCharacterFromType(type, x, y);
 
@@ -53,6 +50,12 @@ public class GameService {
 
         boardsByRoom.put(roomCode, board);
         roomLocks.put(roomCode, new Object()); // Lock para esa sala
+
+        if(!roomLocks.isEmpty()){
+            System.out.println("A continuacion se ve el codigo de la sala si room locks no esta vacio" + roomLocks.get(roomCode));
+        } else{
+            System.out.println("Room locks esta vacio");
+        }
     }
 
     private CharacterType getCharacterTypeById(String id) {

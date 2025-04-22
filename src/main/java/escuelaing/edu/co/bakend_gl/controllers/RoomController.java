@@ -33,6 +33,7 @@ public class RoomController {
     @PostMapping("/create")
     public ResponseEntity<Room> createRoom(@RequestBody Map<String, String> data) {
         String hostId = data.get("hostId");
+        System.out.println("Host Id que recibe el metodo createRoom de RoomController: " + hostId);
         Room room = roomService.createRoom(hostId);
         return new ResponseEntity<>(room, HttpStatus.CREATED);
     }
