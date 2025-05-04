@@ -8,13 +8,13 @@ import java.util.Optional;
 
 @Service
 public class PlayerService {
+
     private final PlayerRepository playerRepository;
 
     public PlayerService(PlayerRepository playerRepository) {
         this.playerRepository = playerRepository;
     }
 
-    // Método para crear un jugador
     public Player createPlayer(String name) {
         // Verificar que el nombre no sea nulo ni vacío
         if (name == null || name.trim().isEmpty()) {
@@ -24,9 +24,9 @@ public class PlayerService {
         return playerRepository.save(newPlayer);
     }
 
-    // Obtener jugador por ID
     public Optional<Player> getPlayerById(String id) {
         return playerRepository.findById(id);
     }
+
 }
 

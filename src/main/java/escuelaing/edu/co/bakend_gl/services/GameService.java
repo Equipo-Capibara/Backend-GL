@@ -7,12 +7,14 @@ import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 public class GameService {
 
@@ -267,7 +269,9 @@ public class GameService {
     }
 
     public Board getBoard(String roomCode) {
-        return boardsByRoom.get(roomCode);
+        Board board = boardsByRoom.get(roomCode);
+        log.info("Room Code: {} Board: {}", roomCode, board.toString());
+        return board;
     }
 
     public void switchLevel(int level) {

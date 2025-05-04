@@ -15,4 +15,15 @@ public enum CharacterType {
     public String getId() {
         return id;
     }
+
+    public static CharacterType mapNumberToCharacterType(String characterIdStr) {
+        return switch (characterIdStr) {
+            case "1" -> CharacterType.FLAME;
+            case "2" -> CharacterType.AQUA;
+            case "3" -> CharacterType.BRISA;
+            case "4" -> CharacterType.STONE;
+            default -> null; // O puedes lanzar una excepción si prefieres
+        };
+    }
+
 }
