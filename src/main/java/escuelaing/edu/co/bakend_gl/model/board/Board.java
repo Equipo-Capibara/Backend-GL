@@ -3,11 +3,19 @@ package escuelaing.edu.co.bakend_gl.model.board;
 import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Slf4j
 public class Board implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -18,12 +26,6 @@ public class Board implements Serializable {
     private List<Key> collectedKeys;
     private List<Character> characters;
     private Door door;
-
-    // Constructor sin argumentos para deserialización
-    public Board() {
-        this.collectedKeys = new ArrayList<>();
-        this.characters = new ArrayList<>();
-    }
 
     public Board(int width, int height) {
         this.width = width;
@@ -84,8 +86,9 @@ public class Board implements Serializable {
 
     private void collectKey(Box box, Character player) {
         if (box.hasKey() && box.getKey().canBePickedBy(player)) {
-            collectedKeys.add(box.getKey());
-            System.out.println("Llave recogida: " + box.getKey().getClass().getSimpleName());
+            Key key = box.getKey();
+            this.collectedKeys.add(key);
+            log.info("Llave recogida: {} por jugador: {}", key.getClass().getSimpleName(), player.getPlayerId());
 
             box.removeKey();
 
@@ -106,7 +109,7 @@ public class Board implements Serializable {
     private void unlockDoor() {
         if (door != null) {
             door.unlock();
-            System.out.println("¡Todas las llaves han sido recogidas! La puerta se ha abierto.");
+            log.info("¡Todas las llaves han sido recogidas! La puerta se ha abierto.");
         }
     }
 
@@ -124,61 +127,4 @@ public class Board implements Serializable {
         }
     }
 
-    // GETTERS y SETTERS
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
-    public Box[][] getGrid() {
-        return grid;
-    }
-
-    public void setGrid(Box[][] grid) {
-        this.grid = grid;
-    }
-
-    public List<Key> getCollectedKeys() {
-        return collectedKeys;
-    }
-
-    public void setCollectedKeys(List<Key> collectedKeys) {
-        this.collectedKeys = collectedKeys;
-    }
-
-    public Door getDoor() { 
-        return door; 
-    }
-    
-    public void setDoor(Door door) {
-        this.door = door;
-    }
-
-    public List<Character> getCharacters() { 
-        return characters; 
-    }
-    
-    public void setCharacters(List<Character> characters) {
-        this.characters = characters;
-    }
 }

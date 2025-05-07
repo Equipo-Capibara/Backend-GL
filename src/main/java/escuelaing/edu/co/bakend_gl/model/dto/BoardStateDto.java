@@ -129,6 +129,7 @@ public class BoardStateDto {
 
         public static CharacterStateDto fromCharacter(Character character) {
             CharacterStateDto dto = new CharacterStateDto();
+            dto.setPlayerId(character.getPlayerId());
             dto.setCharacterType(character.getClass().getSimpleName());
             dto.setX(character.getX());
             dto.setY(character.getY());

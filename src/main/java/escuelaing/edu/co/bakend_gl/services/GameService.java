@@ -3,6 +3,7 @@ package escuelaing.edu.co.bakend_gl.services;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.blocks.*;
 import escuelaing.edu.co.bakend_gl.model.board.Box;
+import escuelaing.edu.co.bakend_gl.model.board.Door;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
@@ -21,14 +22,14 @@ import java.util.concurrent.TimeUnit;
 public class GameService {
 
     private int currentLevel = 1;
-    
+
     // Solo mantenemos un mapa para relacionar jugadores con personajes
     // Este mapa se usará solo temporalmente durante las operaciones
     private final Map<String, Character> characterByPlayerId = new ConcurrentHashMap<>();
-    
+
     // Mapa de locks por sala para sincronización
     private final Map<String, Object> roomLocks = new ConcurrentHashMap<>();
-    
+
     @Autowired
     private BoardService boardService;
 
@@ -38,10 +39,10 @@ public class GameService {
 
     public void initializeGameForRoom(String roomCode, List<Player> players) {
         Board board = setupLevel(currentLevel);
-        
+
         // Usamos el roomCode como id del tablero
         board.setId(roomCode);
-        
+
         // Asignar posiciones iniciales a los personajes
         int[][] spawnPoints = {
                 {1, 1}, {18, 1}, {1, 10}, {18, 10}
@@ -64,7 +65,7 @@ public class GameService {
 
         // Guardar el tablero solo en Redis
         boardService.saveWithExpiration(board, 2, TimeUnit.HOURS); // Expire en 2 horas
-        
+
         // Creamos el lock para esta sala
         roomLocks.put(roomCode, new Object());
 
@@ -153,7 +154,7 @@ public class GameService {
     public void movePlayer(String roomCode, String playerId, String direction) {
         // Obtenemos el lock para esta operación
         Object lock = roomLocks.computeIfAbsent(roomCode, k -> new Object());
-        
+
         synchronized (lock) {
             // Obtenemos el tablero directamente desde Redis
             Board board = boardService.getBoardFromRedis(roomCode);
@@ -161,7 +162,7 @@ public class GameService {
                 log.error("No se encontró el tablero para la sala: {}", roomCode);
                 return;
             }
-            
+
             // Buscamos el personaje del jugador
             Character player = findPlayerCharacter(board, playerId);
             if (player == null) {
@@ -179,8 +180,31 @@ public class GameService {
                 case "d": newX++; player.setDirection("d"); break;
             }
 
-            board.movePlayer(player, newX, newY);
-            
+            // Verificar si el movimiento es válido
+            if (board.isMoveValid(newX, newY)) {
+                // Guardar posición actual antes de mover
+                int oldX = player.getX();
+                int oldY = player.getY();
+
+                // Ejecutar el movimiento en el tablero
+                board.movePlayer(player, newX, newY);
+
+                // Verificar si el jugador llegó a la puerta
+                Box newBox = board.getBox(newX, newY);
+                if (newBox != null && newBox.getDoor() != null) {
+                    Door door = newBox.getDoor();
+                    if (!door.isLocked()) {
+                        // Puerta desbloqueada, nivel completado
+                        log.info("Jugador {} alcanzó la puerta desbloqueada. ¡Nivel completado!", playerId);
+                        // Aquí puedes implementar lógica para pasar al siguiente nivel o terminar el juego
+                    }
+                }
+
+                log.info("Jugador {} se movió de ({},{}) a ({},{})", playerId, oldX, oldY, newX, newY);
+            } else {
+                log.info("Movimiento no válido para el jugador {} a la posición ({},{})", playerId, newX, newY);
+            }
+
             // Actualizar en Redis después de cada movimiento
             boardService.updateBoard(board);
         }
@@ -189,7 +213,7 @@ public class GameService {
     public void buildBlocks(String roomCode, String playerId) {
         // Obtenemos el lock para esta operación
         Object lock = roomLocks.computeIfAbsent(roomCode, k -> new Object());
-        
+
         synchronized (lock) {
             // Obtenemos el tablero directamente desde Redis
             Board board = boardService.getBoardFromRedis(roomCode);
@@ -197,7 +221,7 @@ public class GameService {
                 log.error("No se encontró el tablero para la sala: {}", roomCode);
                 return;
             }
-            
+
             // Buscamos el personaje del jugador
             Character player = findPlayerCharacter(board, playerId);
             if (player == null) {
@@ -236,7 +260,7 @@ public class GameService {
                     }
                 }
             }
-            
+
             // Actualizar en Redis después de construir bloques
             boardService.updateBoard(board);
         }
@@ -245,7 +269,7 @@ public class GameService {
     public void destroyBlock(String roomCode, String playerId) {
         // Obtenemos el lock para esta operación
         Object lock = roomLocks.computeIfAbsent(roomCode, k -> new Object());
-        
+
         synchronized (lock) {
             // Obtenemos el tablero directamente desde Redis
             Board board = boardService.getBoardFromRedis(roomCode);
@@ -253,7 +277,7 @@ public class GameService {
                 log.error("No se encontró el tablero para la sala: {}", roomCode);
                 return;
             }
-            
+
             // Buscamos el personaje del jugador
             Character player = findPlayerCharacter(board, playerId);
             if (player == null) {
@@ -296,7 +320,7 @@ public class GameService {
                     }
                 }
             }
-            
+
             // Actualizar en Redis después de destruir bloques
             boardService.updateBoard(board);
         }
@@ -329,6 +353,13 @@ public class GameService {
      * Obtiene el tablero para una sala directamente desde Redis
      */
     public Board getBoard(String roomCode) {
+        return boardService.getBoardFromRedis(roomCode);
+    }
+
+    /**
+     * Obtiene el tablero para una sala directamente desde Redis
+     */
+    public Board getBoardByRoomCode(String roomCode) {
         return boardService.getBoardFromRedis(roomCode);
     }
 

@@ -4,8 +4,18 @@ import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.io.Serializable;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Box implements Serializable {
     private static final long serialVersionUID = 1L;
     
@@ -14,10 +24,7 @@ public class Box implements Serializable {
     private Character character;
     private Key key;
     private Door door;
-
-    // Constructor sin argumentos para deserialización
-    public Box() {
-    }
+    private boolean walkable;
 
     public Box(int x, int y) {
         this.x = x;
@@ -26,50 +33,38 @@ public class Box implements Serializable {
         this.character = null;
         this.key = null;
         this.door = null;
+        this.walkable = true;
     }
 
+    @JsonIgnore
     public boolean isWalkable() {
-        return block == null && (door == null || !door.isLocked()) && character == null;
+        boolean isWalkable = block == null && (door == null || !door.isLocked()) && character == null;
+        this.walkable = isWalkable;
+        return isWalkable;
     }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public Character getCharacter() {
-        return character;
-    }
-
-    public Block getBlock() {
-        return block;
+    
+    public boolean getWalkable() {
+        return isWalkable();
     }
 
     public void setBlock(Block block) {
         this.block = block;
+        this.walkable = (block == null && (door == null || !door.isLocked()) && character == null);
     }
 
     public void removeBlock() {
         this.block = null;
+        this.walkable = ((door == null || !door.isLocked()) && character == null);
     }
 
     public void setCharacter(Character character) {
         this.character = character;
+        this.walkable = (block == null && (door == null || !door.isLocked()) && character == null);
     }
 
     public void removeCharacter() {
         this.character = null;
-    }
-
-    public void setKey(Key key) {
-        this.key = key;
-    }
-
-    public Key getKey() {
-        return key;
+        this.walkable = (block == null && (door == null || !door.isLocked()));
     }
 
     public boolean hasKey() {
@@ -82,9 +77,7 @@ public class Box implements Serializable {
 
     public void setDoor(Door door) {
         this.door = door;
+        this.walkable = (block == null && (door == null || !door.isLocked()) && character == null);
     }
 
-    public Door getDoor() {
-        return door;
-    }
 }

@@ -1,12 +1,17 @@
 package escuelaing.edu.co.bakend_gl.model.characters;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Aqua extends Character {
+ 
     public Aqua(int x, int y) {
         super(x, y, "Aqua");
     }
 
     @Override
     public void useAbility() {
-        System.out.println("Habilidad especial en mantenimiento");
+        log.info("Habilidad especial en mantenimiento");
     }
+
 }

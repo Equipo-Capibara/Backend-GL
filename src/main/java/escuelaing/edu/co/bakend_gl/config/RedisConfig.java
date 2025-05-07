@@ -11,7 +11,9 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import escuelaing.edu.co.bakend_gl.model.board.Board;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 public class RedisConfig {
 
@@ -26,6 +28,7 @@ public class RedisConfig {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisHost);
         config.setPort(redisPort);
+        log.info("Configurando Redis en {}:{}", redisHost, redisPort);
         return new LettuceConnectionFactory(config);
     }
 
@@ -39,7 +42,7 @@ public class RedisConfig {
         Jackson2JsonRedisSerializer<Board> serializer = new Jackson2JsonRedisSerializer<>(Board.class);
         template.setValueSerializer(serializer);
         template.setHashValueSerializer(serializer);
-
+        
         return template;
     }
 } 
