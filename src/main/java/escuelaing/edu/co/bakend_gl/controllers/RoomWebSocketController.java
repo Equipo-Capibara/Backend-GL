@@ -1,9 +1,12 @@
 package escuelaing.edu.co.bakend_gl.controllers;
 
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
+import escuelaing.edu.co.bakend_gl.model.board.Board;
+import escuelaing.edu.co.bakend_gl.model.dto.BoardStateDto;
 import escuelaing.edu.co.bakend_gl.model.dto.CharacterSelectionDto;
 import escuelaing.edu.co.bakend_gl.model.dto.ConfirmCharacterSelectionDto;
 import escuelaing.edu.co.bakend_gl.model.dto.JoinRoomDto;
+import escuelaing.edu.co.bakend_gl.services.GameService;
 import escuelaing.edu.co.bakend_gl.services.PlayerService;
 import escuelaing.edu.co.bakend_gl.services.RoomService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 
@@ -27,6 +31,7 @@ public class RoomWebSocketController {
     private SimpMessagingTemplate messagingTemplate;
     private final RoomService roomService;
     private final PlayerService playerService;
+    private final GameService gameService;
 
     @MessageMapping("/room/{roomId}/join")
     public void joinRoom(@DestinationVariable String roomId, @Payload JoinRoomDto joinRoomDto) {
@@ -94,11 +99,51 @@ public class RoomWebSocketController {
 
     @MessageMapping("/room/{roomId}/start")
     public void startGame(@DestinationVariable String roomId) {
+        log.info("Iniciando juego en sala: {}", roomId);
+        
+        // Iniciar el juego en la sala
         Boolean started = roomService.startGame(roomId);
-
-        Map<String, Object> gameState = Map.of("players", roomService.getPlayersInRoom(roomId).values(), "status", "started", "roomId", roomId);
-        Map<String, Object> state = Map.of("gameState", gameState);
-        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/start", state);
+        
+        if (started) {
+            // Obtener todos los jugadores de la sala
+            Room room = roomService.getRoom(roomId);
+            ArrayList<Object> playersList = new ArrayList<>(room.getPlayers().values());
+            
+            // Inicializar el tablero del juego para esta sala
+            gameService.initializeGameForRoom(roomId, room.getPlayers().values().stream().toList());
+            
+            // Obtener el tablero inicializado
+            Board board = gameService.getBoardByRoomCode(roomId);
+            
+            if (board != null) {
+                // Convertir a DTO para enviar al frontend
+                BoardStateDto boardState = BoardStateDto.fromBoard(board, roomId, "start");
+                
+                // Construir y enviar respuesta
+                Map<String, Object> gameState = Map.of(
+                    "players", playersList, 
+                    "status", "started", 
+                    "roomId", roomId, 
+                    "board", boardState
+                );
+                
+                messagingTemplate.convertAndSend("/topic/room/" + roomId + "/start", gameState);
+                
+                // También enviamos el estado del tablero al tópico del juego
+                messagingTemplate.convertAndSend("/topic/game/" + roomId + "/state", boardState);
+                
+                log.info("Juego iniciado en sala {} con {} jugadores", roomId, playersList.size());
+            } else {
+                log.error("Error al inicializar el tablero para la sala {}", roomId);
+                Map<String, Object> errorState = Map.of("error", "No se pudo inicializar el tablero");
+                messagingTemplate.convertAndSend("/topic/room/" + roomId + "/error", errorState);
+            }
+        } else {
+            log.warn("No se pudo iniciar el juego en la sala {}", roomId);
+            Map<String, Object> errorState = Map.of(
+                "error", "No se pudo iniciar el juego. Todos los jugadores deben confirmar su selección."
+            );
+            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/error", errorState);
+        }
     }
-
 }

@@ -4,12 +4,20 @@ import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
 
-public class Box {
+import java.io.Serializable;
+
+public class Box implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private int x, y;
     private Block block;
     private Character character;
     private Key key;
     private Door door;
+
+    // Constructor sin argumentos para deserialización
+    public Box() {
+    }
 
     public Box(int x, int y) {
         this.x = x;

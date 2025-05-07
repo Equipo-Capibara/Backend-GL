@@ -8,21 +8,29 @@ import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
 import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class GameService {
 
     private int currentLevel = 1;
-    private Map<String, Board> boardsByRoom = new ConcurrentHashMap<>();
-    private Map<String, Character> characterByPlayerId = new ConcurrentHashMap<>();
+    
+    // Solo mantenemos un mapa para relacionar jugadores con personajes
+    // Este mapa se usará solo temporalmente durante las operaciones
+    private final Map<String, Character> characterByPlayerId = new ConcurrentHashMap<>();
+    
+    // Mapa de locks por sala para sincronización
     private final Map<String, Object> roomLocks = new ConcurrentHashMap<>();
-
+    
+    @Autowired
+    private BoardService boardService;
 
     public GameService() {
         // Nada que inicializar al arranque
@@ -30,7 +38,10 @@ public class GameService {
 
     public void initializeGameForRoom(String roomCode, List<Player> players) {
         Board board = setupLevel(currentLevel);
-
+        
+        // Usamos el roomCode como id del tablero
+        board.setId(roomCode);
+        
         // Asignar posiciones iniciales a los personajes
         int[][] spawnPoints = {
                 {1, 1}, {18, 1}, {1, 10}, {18, 10}
@@ -45,19 +56,19 @@ public class GameService {
             Character character = createCharacterFromType(type, x, y);
 
             if (character != null) {
+                // Identificamos el personaje con el ID del jugador
+                character.setPlayerId(player.getId());
                 board.addCharacter(character);
-                characterByPlayerId.put(player.getId(), character);
             }
         }
 
-        boardsByRoom.put(roomCode, board);
-        roomLocks.put(roomCode, new Object()); // Lock para esa sala
+        // Guardar el tablero solo en Redis
+        boardService.saveWithExpiration(board, 2, TimeUnit.HOURS); // Expire en 2 horas
+        
+        // Creamos el lock para esta sala
+        roomLocks.put(roomCode, new Object());
 
-        if(!roomLocks.isEmpty()){
-            System.out.println("A continuacion se ve el codigo de la sala si room locks no esta vacio" + roomLocks.get(roomCode));
-        } else{
-            System.out.println("Room locks esta vacio");
-        }
+        log.info("Tablero inicializado para sala: {} con {} jugadores", roomCode, players.size());
     }
 
     private CharacterType getCharacterTypeById(String id) {
@@ -78,7 +89,6 @@ public class GameService {
             default: return null;
         }
     }
-
 
     private Board setupLevel(int level) {
         switch (level) {
@@ -141,13 +151,24 @@ public class GameService {
     }
 
     public void movePlayer(String roomCode, String playerId, String direction) {
-        Board board = boardsByRoom.get(roomCode);
-        Character player = characterByPlayerId.get(playerId);
-        Object lock = roomLocks.get(roomCode);
-
-        if (board == null || player == null) return;
-
+        // Obtenemos el lock para esta operación
+        Object lock = roomLocks.computeIfAbsent(roomCode, k -> new Object());
+        
         synchronized (lock) {
+            // Obtenemos el tablero directamente desde Redis
+            Board board = boardService.getBoardFromRedis(roomCode);
+            if (board == null) {
+                log.error("No se encontró el tablero para la sala: {}", roomCode);
+                return;
+            }
+            
+            // Buscamos el personaje del jugador
+            Character player = findPlayerCharacter(board, playerId);
+            if (player == null) {
+                log.error("No se encontró el personaje para el jugador: {}", playerId);
+                return;
+            }
+
             int newX = player.getX();
             int newY = player.getY();
 
@@ -159,17 +180,31 @@ public class GameService {
             }
 
             board.movePlayer(player, newX, newY);
+            
+            // Actualizar en Redis después de cada movimiento
+            boardService.updateBoard(board);
         }
     }
 
     public void buildBlocks(String roomCode, String playerId) {
-        Board board = boardsByRoom.get(roomCode);
-        Character player = characterByPlayerId.get(playerId);
-        Object lock = roomLocks.get(roomCode);
-
-        if (board == null || player == null) return;
-
+        // Obtenemos el lock para esta operación
+        Object lock = roomLocks.computeIfAbsent(roomCode, k -> new Object());
+        
         synchronized (lock) {
+            // Obtenemos el tablero directamente desde Redis
+            Board board = boardService.getBoardFromRedis(roomCode);
+            if (board == null) {
+                log.error("No se encontró el tablero para la sala: {}", roomCode);
+                return;
+            }
+            
+            // Buscamos el personaje del jugador
+            Character player = findPlayerCharacter(board, playerId);
+            if (player == null) {
+                log.error("No se encontró el personaje para el jugador: {}", playerId);
+                return;
+            }
+
             int dx = 0, dy = 0;
             switch (player.getDirection().toLowerCase()) {
                 case "w": dy = -1; break;
@@ -201,17 +236,31 @@ public class GameService {
                     }
                 }
             }
+            
+            // Actualizar en Redis después de construir bloques
+            boardService.updateBoard(board);
         }
     }
 
     public void destroyBlock(String roomCode, String playerId) {
-        Board board = boardsByRoom.get(roomCode);
-        Character player = characterByPlayerId.get(playerId);
-        Object lock = roomLocks.get(roomCode);
-
-        if (board == null || player == null) return;
-
+        // Obtenemos el lock para esta operación
+        Object lock = roomLocks.computeIfAbsent(roomCode, k -> new Object());
+        
         synchronized (lock) {
+            // Obtenemos el tablero directamente desde Redis
+            Board board = boardService.getBoardFromRedis(roomCode);
+            if (board == null) {
+                log.error("No se encontró el tablero para la sala: {}", roomCode);
+                return;
+            }
+            
+            // Buscamos el personaje del jugador
+            Character player = findPlayerCharacter(board, playerId);
+            if (player == null) {
+                log.error("No se encontró el personaje para el jugador: {}", playerId);
+                return;
+            }
+
             int dx = 0, dy = 0;
             switch (player.getDirection().toLowerCase()) {
                 case "w": dy = -1; break;
@@ -247,34 +296,45 @@ public class GameService {
                     }
                 }
             }
+            
+            // Actualizar en Redis después de destruir bloques
+            boardService.updateBoard(board);
         }
     }
 
-    private boolean isBlockOfPlayerElement (String elementBlock, Block block) {
-        switch (elementBlock) {
-            case "Flame": return block instanceof BlockFire;
-            case "Aqua": return block instanceof BlockWater;
-            case "Stone": return block instanceof BlockEarth;
-            case "Brisa": return block instanceof BlockAir;
-            default: return false;
-        }
+    private boolean isBlockOfPlayerElement(String elementBlock, Block block) {
+        return (elementBlock.equals("Flame") && block instanceof BlockFire) ||
+                (elementBlock.equals("Aqua") && block instanceof BlockWater) ||
+                (elementBlock.equals("Stone") && block instanceof BlockEarth) ||
+                (elementBlock.equals("Brisa") && block instanceof BlockAir);
     }
-
 
     public void useAbility(String roomCode, String playerId) {
-        Character player = characterByPlayerId.get(playerId);
-        if (player != null) {
-            player.useAbility();
-        }
+        // Implementar uso de habilidades especiales de los personajes
     }
 
+    /**
+     * Busca un personaje en el tablero por el ID del jugador
+     */
+    private Character findPlayerCharacter(Board board, String playerId) {
+        for (Character character : board.getCharacters()) {
+            if (playerId.equals(character.getPlayerId())) {
+                return character;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Obtiene el tablero para una sala directamente desde Redis
+     */
     public Board getBoard(String roomCode) {
-        Board board = boardsByRoom.get(roomCode);
-        log.info("Room Code: {} Board: {}", roomCode, board.toString());
-        return board;
+        return boardService.getBoardFromRedis(roomCode);
     }
 
     public void switchLevel(int level) {
-        currentLevel = level;
+        if (level > 0) {
+            currentLevel = level;
+        }
     }
 }

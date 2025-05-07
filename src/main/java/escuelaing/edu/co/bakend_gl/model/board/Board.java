@@ -4,22 +4,32 @@ import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Board {
+public class Board implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private String id;
     private int width;
     private int height;
     private Box[][] grid;
     private List<Key> collectedKeys;
-    private List<Character> characters;  // NUEVA LISTA
+    private List<Character> characters;
     private Door door;
+
+    // Constructor sin argumentos para deserialización
+    public Board() {
+        this.collectedKeys = new ArrayList<>();
+        this.characters = new ArrayList<>();
+    }
 
     public Board(int width, int height) {
         this.width = width;
         this.height = height;
         this.collectedKeys = new ArrayList<>();
-        this.characters = new ArrayList<>(); // INICIALIZACIÓN
+        this.characters = new ArrayList<>();
         this.grid = new Box[width][height];
         this.door = null;
 
@@ -114,25 +124,61 @@ public class Board {
         }
     }
 
-    // GETTERS
+    // GETTERS y SETTERS
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public int getWidth() {
         return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
     }
 
     public int getHeight() {
         return height;
     }
 
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     public Box[][] getGrid() {
         return grid;
+    }
+
+    public void setGrid(Box[][] grid) {
+        this.grid = grid;
     }
 
     public List<Key> getCollectedKeys() {
         return collectedKeys;
     }
 
-    public Door getDoor() { return door; }
+    public void setCollectedKeys(List<Key> collectedKeys) {
+        this.collectedKeys = collectedKeys;
+    }
 
-    public List<Character> getCharacters() { return characters; }
+    public Door getDoor() { 
+        return door; 
+    }
+    
+    public void setDoor(Door door) {
+        this.door = door;
+    }
+
+    public List<Character> getCharacters() { 
+        return characters; 
+    }
+    
+    public void setCharacters(List<Character> characters) {
+        this.characters = characters;
+    }
 }
