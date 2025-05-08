@@ -53,14 +53,15 @@ jobs:
       - name: ⬆️ Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: java-app
+          name: backend-gl-java-app
           path: '${{ github.workspace }}/target/*.jar'
 
   deploy:
-    permissions:
-      contents: none
     runs-on: ubuntu-latest
     needs: build
+
+    permissions:
+      contents: none
 
     environment:
       name: 'application'
@@ -70,7 +71,7 @@ jobs:
       - name: ⏬ Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: java-app
+          name: backend-gl-java-app
 
       - name: 🚀 Deploy to Azure Web App
         id: deploy-to-webapp
