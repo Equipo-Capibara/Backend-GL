@@ -1,11 +1,12 @@
-package escuelaing.edu.co.bakend_gl.model.basicComponents;
+package escuelaing.edu.co.bakend_gl.model.basic_components;
 
 import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data

@@ -1,8 +1,9 @@
-package escuelaing.edu.co.bakend_gl.model.basicComponents;
+package escuelaing.edu.co.bakend_gl.model.basic_components;
 
-import escuelaing.edu.co.bakend_gl.model.characters.CharacterType;
 import jakarta.persistence.Id;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.UUID;

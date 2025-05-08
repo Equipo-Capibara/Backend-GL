@@ -1,16 +1,15 @@
 package escuelaing.edu.co.bakend_gl.model.board;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import java.io.Serializable;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
+import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
@@ -18,7 +17,7 @@ import lombok.AllArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Box implements Serializable {
     private static final long serialVersionUID = 1L;
-    
+
     private int x, y;
     private Block block;
     private Character character;
@@ -41,10 +40,6 @@ public class Box implements Serializable {
         boolean isWalkable = block == null && (door == null || !door.isLocked()) && character == null;
         this.walkable = isWalkable;
         return isWalkable;
-    }
-    
-    public boolean getWalkable() {
-        return isWalkable();
     }
 
     public void setBlock(Block block) {

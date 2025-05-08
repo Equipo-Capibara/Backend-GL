@@ -3,9 +3,9 @@ package escuelaing.edu.co.bakend_gl.model.board;
 import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;

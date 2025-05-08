@@ -1,6 +1,6 @@
 package escuelaing.edu.co.bakend_gl.controllers;
 
-import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
+import escuelaing.edu.co.bakend_gl.model.basic_components.Room;
 import escuelaing.edu.co.bakend_gl.model.dto.CreateRoomDto;
 import escuelaing.edu.co.bakend_gl.services.RoomService;
 import lombok.RequiredArgsConstructor;

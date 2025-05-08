@@ -1,13 +1,12 @@
 package escuelaing.edu.co.bakend_gl.services;
 
+import escuelaing.edu.co.bakend_gl.model.board.Board;
+import escuelaing.edu.co.bakend_gl.repository.BoardRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
-
-import escuelaing.edu.co.bakend_gl.model.board.Board;
-import escuelaing.edu.co.bakend_gl.repository.BoardRepository;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,50 +22,53 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final RedisTemplate<String, Board> boardRedisTemplate;
     private final String BOARD_KEY_PREFIX = "board:";
-    
+
     @Autowired
     public BoardService(BoardRepository boardRepository, RedisTemplate<String, Board> boardRedisTemplate) {
         this.boardRepository = boardRepository;
         this.boardRedisTemplate = boardRedisTemplate;
     }
-    
+
     /**
      * Crea un nuevo tablero y lo almacena en Redis
-     * @param width Ancho del tablero
+     *
+     * @param width  Ancho del tablero
      * @param height Alto del tablero
      * @return El tablero creado
      */
     public Board createBoard(int width, int height) {
         Board board = new Board(width, height);
-        
+
         // Generar un código de sala de 6 caracteres que será usado como ID
         String roomCode = generateRoomCode();
         board.setId(roomCode);
-        
+
         log.info("Creando nuevo tablero con roomCode: {}", roomCode);
-        
+
         // Guardar en el repositorio
         return boardRepository.save(board);
     }
-    
+
     /**
      * Genera un código de sala único de 6 caracteres
      */
     private String generateRoomCode() {
         return UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
-    
+
     /**
      * Busca un tablero por su ID
+     *
      * @param id ID del tablero (roomCode)
      * @return Tablero encontrado o vacío si no existe
      */
     public Optional<Board> getBoardById(String id) {
         return boardRepository.findById(id);
     }
-    
+
     /**
      * Actualiza un tablero existente
+     *
      * @param board Tablero a actualizar
      * @return Tablero actualizado
      */
@@ -86,9 +88,10 @@ public class BoardService {
             return boardRepository.save(board);
         }
     }
-    
+
     /**
      * Elimina un tablero
+     *
      * @param id ID del tablero a eliminar
      */
     public void deleteBoard(String id) {
@@ -97,9 +100,10 @@ public class BoardService {
         boardRedisTemplate.delete(key);
         boardRepository.deleteById(id);
     }
-    
+
     /**
      * Obtiene todos los tableros
+     *
      * @return Lista de tableros
      */
     public List<Board> getAllBoards() {
@@ -107,12 +111,13 @@ public class BoardService {
                 .stream(boardRepository.findAll().spliterator(), false)
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * Guarda un tablero en Redis con un tiempo de expiración
-     * @param board Tablero a guardar
+     *
+     * @param board          Tablero a guardar
      * @param expirationTime Tiempo de expiración
-     * @param timeUnit Unidad de tiempo
+     * @param timeUnit       Unidad de tiempo
      */
     public void saveWithExpiration(Board board, long expirationTime, TimeUnit timeUnit) {
         try {
@@ -124,9 +129,10 @@ public class BoardService {
             throw e;
         }
     }
-    
+
     /**
      * Obtiene un tablero de Redis usando el roomCode
+     *
      * @param roomCode Código de la sala (ID del tablero)
      * @return Tablero encontrado o null si no existe
      */
@@ -146,7 +152,7 @@ public class BoardService {
             return null;
         }
     }
-    
+
     /**
      * Limpia todos los tableros en Redis - útil para resolver problemas de serialización
      */

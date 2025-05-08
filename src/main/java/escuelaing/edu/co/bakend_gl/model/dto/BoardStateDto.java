@@ -8,10 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * DTO para transmitir el estado del tablero a través de WebSocket.
@@ -52,8 +52,8 @@ public class BoardStateDto {
                 Box box = grid[i][j];
                 if (box != null) {
                     // Solo incluir cajas con contenido o que sean caminables
-                    if (box.getBlock() != null || box.getCharacter() != null || 
-                        box.getKey() != null || box.getDoor() != null) {
+                    if (box.getBlock() != null || box.getCharacter() != null ||
+                            box.getKey() != null || box.getDoor() != null) {
                         dto.getBoxes().add(BoxDto.fromBox(box));
                     }
                 }

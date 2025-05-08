@@ -7,7 +7,7 @@ import escuelaing.edu.co.bakend_gl.model.board.Door;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.characters.*;
 import escuelaing.edu.co.bakend_gl.model.keys.*;
-import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
+import escuelaing.edu.co.bakend_gl.model.basic_components.Player;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

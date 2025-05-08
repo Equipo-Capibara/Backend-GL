@@ -1,17 +1,15 @@
 package escuelaing.edu.co.bakend_gl.controllers;
 
-import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
+import escuelaing.edu.co.bakend_gl.model.basic_components.Room;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.dto.BoardStateDto;
 import escuelaing.edu.co.bakend_gl.model.dto.CharacterSelectionDto;
 import escuelaing.edu.co.bakend_gl.model.dto.ConfirmCharacterSelectionDto;
 import escuelaing.edu.co.bakend_gl.model.dto.JoinRoomDto;
 import escuelaing.edu.co.bakend_gl.services.GameService;
-import escuelaing.edu.co.bakend_gl.services.PlayerService;
 import escuelaing.edu.co.bakend_gl.services.RoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -27,10 +25,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RoomWebSocketController {
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
     private final RoomService roomService;
-    private final PlayerService playerService;
     private final GameService gameService;
 
     @MessageMapping("/room/{roomId}/join")
@@ -46,7 +42,7 @@ public class RoomWebSocketController {
         Map<String, Object> players = Map.of("players", roomService.getPlayersInRoom(roomId).values());
 
         messagingTemplate.convertAndSend("/topic/room/" + roomId + "/join-alert", alert);
-        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/players",  players);
+        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/players", players);
     }
 
     @MessageMapping("/confirmCharacterSelection")
@@ -69,8 +65,7 @@ public class RoomWebSocketController {
         String roomCode = payload.get("roomCode");
         String playerId = payload.get("playerId");
         boolean removed = roomService.removePlayer(roomCode, playerId);
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/player-removed",
-                Map.of("playerId", playerId, "success", removed));
+        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/player-removed", Map.of("playerId", playerId, "success", removed));
     }
 
     @MessageMapping("/reconnect/{roomId}")
@@ -78,8 +73,7 @@ public class RoomWebSocketController {
         String playerId = payload.get("playerId");
         Room room = roomService.getRoom(roomId);
         boolean isStillInRoom = room != null && room.getPlayers().containsKey(playerId);
-        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/reconnection",
-                Map.of("playerId", playerId, "inRoom", isStillInRoom));
+        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/reconnection", Map.of("playerIdç", playerId, "inRoom", isStillInRoom));
     }
 
     @MessageMapping("/room/{roomId}/character-select")
@@ -100,38 +94,33 @@ public class RoomWebSocketController {
     @MessageMapping("/room/{roomId}/start")
     public void startGame(@DestinationVariable String roomId) {
         log.info("Iniciando juego en sala: {}", roomId);
-        
+
         // Iniciar el juego en la sala
         Boolean started = roomService.startGame(roomId);
-        
+
         if (started) {
             // Obtener todos los jugadores de la sala
             Room room = roomService.getRoom(roomId);
             ArrayList<Object> playersList = new ArrayList<>(room.getPlayers().values());
-            
+
             // Inicializar el tablero del juego para esta sala
             gameService.initializeGameForRoom(roomId, room.getPlayers().values().stream().toList());
-            
+
             // Obtener el tablero inicializado
             Board board = gameService.getBoardByRoomCode(roomId);
-            
+
             if (board != null) {
                 // Convertir a DTO para enviar al frontend
                 BoardStateDto boardState = BoardStateDto.fromBoard(board, roomId, "start");
-                
+
                 // Construir y enviar respuesta
-                Map<String, Object> gameState = Map.of(
-                    "players", playersList, 
-                    "status", "started", 
-                    "roomId", roomId, 
-                    "board", boardState
-                );
-                
+                Map<String, Object> gameState = Map.of("players", playersList, "status", "started", "roomId", roomId, "board", boardState);
+
                 messagingTemplate.convertAndSend("/topic/room/" + roomId + "/start", gameState);
-                
+
                 // También enviamos el estado del tablero al tópico del juego
                 messagingTemplate.convertAndSend("/topic/game/" + roomId + "/state", boardState);
-                
+
                 log.info("Juego iniciado en sala {} con {} jugadores", roomId, playersList.size());
             } else {
                 log.error("Error al inicializar el tablero para la sala {}", roomId);
@@ -140,9 +129,7 @@ public class RoomWebSocketController {
             }
         } else {
             log.warn("No se pudo iniciar el juego en la sala {}", roomId);
-            Map<String, Object> errorState = Map.of(
-                "error", "No se pudo iniciar el juego. Todos los jugadores deben confirmar su selección."
-            );
+            Map<String, Object> errorState = Map.of("error", "No se pudo iniciar el juego. Todos los jugadores deben confirmar su selección.");
             messagingTemplate.convertAndSend("/topic/room/" + roomId + "/error", errorState);
         }
     }

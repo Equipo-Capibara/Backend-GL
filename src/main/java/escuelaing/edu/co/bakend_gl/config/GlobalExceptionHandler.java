@@ -1,20 +1,19 @@
 package escuelaing.edu.co.bakend_gl.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Manejador global de excepciones
@@ -31,9 +30,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleGlobalException(Exception ex, WebRequest request) {
         log.error("Error no controlado: ", ex);
         return createErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR, 
-                "Ha ocurrido un error inesperado", 
-                ex.getMessage(), 
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ha ocurrido un error inesperado",
+                ex.getMessage(),
                 request.getDescription(false));
     }
 
@@ -46,14 +45,14 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
-                    error -> error.getField(), 
-                    error -> error.getDefaultMessage() == null ? "Error de validación" : error.getDefaultMessage()
+                        error -> error.getField(),
+                        error -> error.getDefaultMessage() == null ? "Error de validación" : error.getDefaultMessage()
                 ));
-        
+
         return createErrorResponse(
-                HttpStatus.BAD_REQUEST, 
-                "Error de validación", 
-                errores, 
+                HttpStatus.BAD_REQUEST,
+                "Error de validación",
+                errores,
                 request.getDescription(false));
     }
 
@@ -63,9 +62,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Object> handleMissingParams(MissingServletRequestParameterException ex, WebRequest request) {
         return createErrorResponse(
-                HttpStatus.BAD_REQUEST, 
-                "Parámetro requerido no encontrado", 
-                "El parámetro '" + ex.getParameterName() + "' es obligatorio", 
+                HttpStatus.BAD_REQUEST,
+                "Parámetro requerido no encontrado",
+                "El parámetro '" + ex.getParameterName() + "' es obligatorio",
                 request.getDescription(false));
     }
 
@@ -75,9 +74,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<Object> handleNoHandlerFound(NoHandlerFoundException ex, WebRequest request) {
         return createErrorResponse(
-                HttpStatus.NOT_FOUND, 
-                "Recurso no encontrado", 
-                "No se encontró el recurso: " + ex.getRequestURL(), 
+                HttpStatus.NOT_FOUND,
+                "Recurso no encontrado",
+                "No se encontró el recurso: " + ex.getRequestURL(),
                 request.getDescription(false));
     }
 
@@ -92,7 +91,7 @@ public class GlobalExceptionHandler {
         body.put("message", mensaje);
         body.put("details", detalle);
         body.put("path", ruta);
-        
+
         return new ResponseEntity<>(body, status);
     }
 } 

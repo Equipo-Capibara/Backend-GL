@@ -1,11 +1,10 @@
 package escuelaing.edu.co.bakend_gl.repository.impl;
 
+import escuelaing.edu.co.bakend_gl.model.board.Board;
+import escuelaing.edu.co.bakend_gl.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-
-import escuelaing.edu.co.bakend_gl.model.board.Board;
-import escuelaing.edu.co.bakend_gl.repository.BoardRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,14 +46,14 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public boolean existsById(String id) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + id));
+        return redisTemplate.hasKey(KEY_PREFIX + id);
     }
 
     @Override
     public Iterable<Board> findAll() {
         Set<String> keys = redisTemplate.keys(KEY_PREFIX + "*");
         List<Board> boards = new ArrayList<>();
-        
+
         if (keys != null) {
             keys.forEach(key -> {
                 Board board = redisTemplate.opsForValue().get(key);
@@ -63,7 +62,7 @@ public class BoardRepositoryImpl implements BoardRepository {
                 }
             });
         }
-        
+
         return boards;
     }
 

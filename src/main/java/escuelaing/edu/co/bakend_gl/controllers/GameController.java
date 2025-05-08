@@ -4,7 +4,6 @@ import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.services.GameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 

@@ -1,22 +1,22 @@
 package escuelaing.edu.co.bakend_gl.model.characters;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.Serializable;
 
 @JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "element", visible = true
+        use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "element", visible = true
 )
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = Aqua.class, names = "Aqua"),
-    @JsonSubTypes.Type(value = Flame.class, names = "Flame"),
-    @JsonSubTypes.Type(value = Stone.class, names = "Stone"),
-    @JsonSubTypes.Type(value = Brisa.class, names = "Brisa"),
+        @JsonSubTypes.Type(value = Aqua.class, names = "Aqua"),
+        @JsonSubTypes.Type(value = Flame.class, names = "Flame"),
+        @JsonSubTypes.Type(value = Stone.class, names = "Stone"),
+        @JsonSubTypes.Type(value = Brisa.class, names = "Brisa"),
 })
 @Getter
 @Setter

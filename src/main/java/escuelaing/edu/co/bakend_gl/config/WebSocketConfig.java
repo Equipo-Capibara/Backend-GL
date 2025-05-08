@@ -35,7 +35,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // Broker de mensajes para envío de mensajes desde el servidor al cliente
         registry.enableSimpleBroker(brokerDestinations);
-        
+
         // Prefijos para mensajes enviados desde el cliente al servidor
         registry.setApplicationDestinationPrefixes(applicationPrefix);
     }
@@ -50,12 +50,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .withSockJS()
                 .setHeartbeatTime(25000)
                 .setDisconnectDelay(30000);
-        
+
         // Endpoint adicional sin SockJS para clientes que no lo necesiten (POSTMAN)
         registry.addEndpoint(endpoint)
                 .setAllowedOrigins(allowedOrigins);
     }
-    
+
     /**
      * Configuración del transporte WebSocket
      */

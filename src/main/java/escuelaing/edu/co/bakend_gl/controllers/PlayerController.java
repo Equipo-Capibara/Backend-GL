@@ -1,6 +1,6 @@
 package escuelaing.edu.co.bakend_gl.controllers;
 
-import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
+import escuelaing.edu.co.bakend_gl.model.basic_components.Player;
 import escuelaing.edu.co.bakend_gl.services.PlayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

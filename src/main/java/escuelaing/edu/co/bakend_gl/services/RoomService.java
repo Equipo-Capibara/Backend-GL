@@ -1,17 +1,16 @@
 package escuelaing.edu.co.bakend_gl.services;
 
-import escuelaing.edu.co.bakend_gl.model.basicComponents.Player;
-import escuelaing.edu.co.bakend_gl.model.basicComponents.Room;
+import escuelaing.edu.co.bakend_gl.model.basic_components.Player;
+import escuelaing.edu.co.bakend_gl.model.basic_components.Room;
 import escuelaing.edu.co.bakend_gl.model.characters.CharacterType;
 import escuelaing.edu.co.bakend_gl.repository.PlayerRepository;
 import escuelaing.edu.co.bakend_gl.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
