@@ -23,6 +23,7 @@ public class GameWebSocketController {
     private final GameService gameService;
     private final BoardService boardService;
     private final SimpMessagingTemplate messagingTemplate;
+    private static final String TOPIC_GAME = "/topic/game/";
 
     /**
      * Endpoint para mover un jugador
@@ -43,7 +44,7 @@ public class GameWebSocketController {
             BoardStateDto boardState = BoardStateDto.fromBoard(board, roomCode, "move");
 
             // Enviar actualización a todos los clientes suscritos
-            messagingTemplate.convertAndSend("/topic/game/" + roomCode + "/state", boardState);
+            messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/state", boardState);
 
             // Actualizar en Redis con tiempo de expiración
             boardService.saveWithExpiration(board, 2, TimeUnit.HOURS);
@@ -69,7 +70,7 @@ public class GameWebSocketController {
             BoardStateDto boardState = BoardStateDto.fromBoard(board, roomCode, "build");
 
             // Enviar actualización
-            messagingTemplate.convertAndSend("/topic/game/" + roomCode + "/state", boardState);
+            messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/state", boardState);
 
             // Actualizar en Redis
             boardService.saveWithExpiration(board, 2, TimeUnit.HOURS);
@@ -95,7 +96,7 @@ public class GameWebSocketController {
             BoardStateDto boardState = BoardStateDto.fromBoard(board, roomCode, "destroy");
 
             // Enviar actualización
-            messagingTemplate.convertAndSend("/topic/game/" + roomCode + "/state", boardState);
+            messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/state", boardState);
 
             // Actualizar en Redis
             boardService.saveWithExpiration(board, 2, TimeUnit.HOURS);
@@ -116,7 +117,7 @@ public class GameWebSocketController {
             BoardStateDto boardState = BoardStateDto.fromBoard(board, roomCode, "state");
 
             // Enviar estado actual
-            messagingTemplate.convertAndSend("/topic/game/" + roomCode + "/state", boardState);
+            messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/state", boardState);
         } else {
             log.warn("No se encontró tablero para la sala: {}", roomCode);
         }

@@ -229,7 +229,8 @@ public class GameService {
                 return;
             }
 
-            int dx = 0, dy = 0;
+            int dx = 0;
+            int dy = 0;
             switch (player.getDirection().toLowerCase()) {
                 case "w": dy = -1; break;
                 case "s": dy = 1; break;
@@ -257,6 +258,7 @@ public class GameService {
                         case "Aqua": board.addBlock(new BlockWater(x, y)); break;
                         case "Stone": board.addBlock(new BlockEarth(x, y)); break;
                         case "Brisa": board.addBlock(new BlockAir(x, y)); break;
+                        default: break;
                     }
                 }
             }
@@ -285,7 +287,8 @@ public class GameService {
                 return;
             }
 
-            int dx = 0, dy = 0;
+            int dx = 0;
+            int dy = 0;
             switch (player.getDirection().toLowerCase()) {
                 case "w": dy = -1; break;
                 case "s": dy = 1; break;

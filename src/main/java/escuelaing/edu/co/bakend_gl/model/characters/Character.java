@@ -25,12 +25,13 @@ import java.io.Serializable;
 public abstract class Character implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    protected int x, y;
+    protected int x;
+    protected int y;
     protected String element;
     protected String playerId;  // Identificador del jugador que controla este personaje
     protected String direction = "s"; // w - arriba, s - abajo, a - izq, d - der
 
-    public Character(int x, int y, String element) {
+    protected Character(int x, int y, String element) {
         this.x = x;
         this.y = y;
         this.element = element;

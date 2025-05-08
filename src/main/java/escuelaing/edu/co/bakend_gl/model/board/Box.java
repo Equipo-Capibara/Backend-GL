@@ -18,7 +18,8 @@ import java.io.Serializable;
 public class Box implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int x, y;
+    private int x;
+    private int y;
     private Block block;
     private Character character;
     private Key key;

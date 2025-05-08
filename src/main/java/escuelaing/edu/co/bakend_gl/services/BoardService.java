@@ -21,7 +21,7 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final RedisTemplate<String, Board> boardRedisTemplate;
-    private final String BOARD_KEY_PREFIX = "board:";
+    private static final String BOARD_KEY_PREFIX = "board:";
 
     @Autowired
     public BoardService(BoardRepository boardRepository, RedisTemplate<String, Board> boardRedisTemplate) {

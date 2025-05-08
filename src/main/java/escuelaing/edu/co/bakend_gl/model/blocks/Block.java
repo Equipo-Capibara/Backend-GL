@@ -30,7 +30,7 @@ public abstract class Block implements Serializable {
     protected boolean destructible;
     protected String allowedCharacter; // Qué personaje puede destruirlo
 
-    public Block(int x, int y, String type, boolean destructible, String allowedCharacter) {
+    protected Block(int x, int y, String type, boolean destructible, String allowedCharacter) {
         this.x = x;
         this.y = y;
         this.type = type;

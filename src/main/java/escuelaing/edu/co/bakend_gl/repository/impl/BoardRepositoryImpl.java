@@ -15,7 +15,7 @@ import java.util.Set;
 public class BoardRepositoryImpl implements BoardRepository {
 
     private final RedisTemplate<String, Board> redisTemplate;
-    private final String KEY_PREFIX = "board:";
+    private static final String KEY_PREFIX = "board:";
 
     @Autowired
     public BoardRepositoryImpl(RedisTemplate<String, Board> redisTemplate) {

@@ -28,6 +28,8 @@ public class RoomWebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
     private final RoomService roomService;
     private final GameService gameService;
+    private static final String TOPIC_ROOM = "/topic/room/";
+    private static final String TOPIC_GAME = "/topic/game/";
 
     @MessageMapping("/room/{roomId}/join")
     public void joinRoom(@DestinationVariable String roomId, @Payload JoinRoomDto joinRoomDto) {
@@ -41,8 +43,8 @@ public class RoomWebSocketController {
         Map<String, Object> alert = Map.of("username", username, "playerId", playerId, "joined", joined);
         Map<String, Object> players = Map.of("players", roomService.getPlayersInRoom(roomId).values());
 
-        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/join-alert", alert);
-        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/players", players);
+        messagingTemplate.convertAndSend(TOPIC_ROOM + roomId + "/join-alert", alert);
+        messagingTemplate.convertAndSend(TOPIC_ROOM + roomId + "/players", players);
     }
 
     @MessageMapping("/confirmCharacterSelection")
@@ -57,7 +59,7 @@ public class RoomWebSocketController {
         log.info("Estado de confrimacion: {}", roomConfirm);
 
         Map<String, Object> players = Map.of("players", roomService.getPlayersInRoom(roomCode).values());
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/confirm", players);
+        messagingTemplate.convertAndSend(TOPIC_ROOM + roomCode + "/confirm", players);
     }
 
     @MessageMapping("/removePlayer")
@@ -65,7 +67,7 @@ public class RoomWebSocketController {
         String roomCode = payload.get("roomCode");
         String playerId = payload.get("playerId");
         boolean removed = roomService.removePlayer(roomCode, playerId);
-        messagingTemplate.convertAndSend("/topic/room/" + roomCode + "/player-removed", Map.of("playerId", playerId, "success", removed));
+        messagingTemplate.convertAndSend(TOPIC_ROOM + roomCode + "/player-removed", Map.of("playerId", playerId, "success", removed));
     }
 
     @MessageMapping("/reconnect/{roomId}")
@@ -73,7 +75,7 @@ public class RoomWebSocketController {
         String playerId = payload.get("playerId");
         Room room = roomService.getRoom(roomId);
         boolean isStillInRoom = room != null && room.getPlayers().containsKey(playerId);
-        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/reconnection", Map.of("playerIdç", playerId, "inRoom", isStillInRoom));
+        messagingTemplate.convertAndSend(TOPIC_ROOM + roomId + "/reconnection", Map.of("playerId", playerId, "inRoom", isStillInRoom));
     }
 
     @MessageMapping("/room/{roomId}/character-select")
@@ -88,7 +90,7 @@ public class RoomWebSocketController {
 
         Map<String, Object> players = Map.of("players", roomService.getPlayersInRoom(roomId).values());
 
-        messagingTemplate.convertAndSend("/topic/room/" + roomId + "/character-select", players);
+        messagingTemplate.convertAndSend(TOPIC_ROOM + roomId + "/character-select", players);
     }
 
     @MessageMapping("/room/{roomId}/start")
@@ -98,7 +100,7 @@ public class RoomWebSocketController {
         // Iniciar el juego en la sala
         Boolean started = roomService.startGame(roomId);
 
-        if (started) {
+        if (Boolean.TRUE.equals(started)) {
             // Obtener todos los jugadores de la sala
             Room room = roomService.getRoom(roomId);
             ArrayList<Object> playersList = new ArrayList<>(room.getPlayers().values());
@@ -116,21 +118,21 @@ public class RoomWebSocketController {
                 // Construir y enviar respuesta
                 Map<String, Object> gameState = Map.of("players", playersList, "status", "started", "roomId", roomId, "board", boardState);
 
-                messagingTemplate.convertAndSend("/topic/room/" + roomId + "/start", gameState);
+                messagingTemplate.convertAndSend(TOPIC_ROOM + roomId + "/start", gameState);
 
                 // También enviamos el estado del tablero al tópico del juego
-                messagingTemplate.convertAndSend("/topic/game/" + roomId + "/state", boardState);
+                messagingTemplate.convertAndSend(TOPIC_GAME + roomId + "/state", boardState);
 
                 log.info("Juego iniciado en sala {} con {} jugadores", roomId, playersList.size());
             } else {
                 log.error("Error al inicializar el tablero para la sala {}", roomId);
                 Map<String, Object> errorState = Map.of("error", "No se pudo inicializar el tablero");
-                messagingTemplate.convertAndSend("/topic/room/" + roomId + "/error", errorState);
+                messagingTemplate.convertAndSend(TOPIC_ROOM + roomId + "/error", errorState);
             }
         } else {
             log.warn("No se pudo iniciar el juego en la sala {}", roomId);
             Map<String, Object> errorState = Map.of("error", "No se pudo iniciar el juego. Todos los jugadores deben confirmar su selección.");
-            messagingTemplate.convertAndSend("/topic/room/" + roomId + "/error", errorState);
+            messagingTemplate.convertAndSend(TOPIC_ROOM + roomId + "/error", errorState);
         }
     }
 }
