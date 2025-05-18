@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Aqua extends Character {
 
+    public Aqua() {super(0,0, "Aqua");}
+
     public Aqua(int x, int y) {
         super(x, y, "Aqua");
     }

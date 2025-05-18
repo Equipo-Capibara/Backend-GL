@@ -4,6 +4,9 @@ import escuelaing.edu.co.bakend_gl.model.characters.Brisa;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 
 public class KeyBrisa extends Key {
+
+    public KeyBrisa() {super(0,0);}
+
     public KeyBrisa(int x, int y) {
         super(x, y);
     }

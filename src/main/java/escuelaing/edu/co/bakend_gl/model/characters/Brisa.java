@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Brisa extends Character {
 
+    public Brisa() {super(0,0, "Brisa");}
+
     public Brisa(int x, int y) {
         super(x, y, "Brisa");
     }
