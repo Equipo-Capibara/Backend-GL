@@ -46,14 +46,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint(endpoint)
-                .setAllowedOrigins(allowedOrigins)
+                .setAllowedOriginPatterns(allowedOrigins)
                 .withSockJS()
                 .setHeartbeatTime(25000)
                 .setDisconnectDelay(30000);
 
         // Endpoint adicional sin SockJS para clientes que no lo necesiten (POSTMAN)
         registry.addEndpoint(endpoint)
-                .setAllowedOrigins(allowedOrigins);
+                .setAllowedOriginPatterns(allowedOrigins);
     }
 
     /**
