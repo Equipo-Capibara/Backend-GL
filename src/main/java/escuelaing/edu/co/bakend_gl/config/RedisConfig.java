@@ -7,10 +7,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+
 
 @Slf4j
 @Configuration
@@ -25,14 +29,36 @@ public class RedisConfig {
     @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
+    @Value("${spring.data.redis.ssl.enabled:false}")
+    private boolean redisUseSsl;
+
+    @Value("${spring.data.redis.timeout:2000}")
+    private int redisTimeout;
+
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisHost);
         config.setPort(redisPort);
-        config.setPassword(redisPassword);
-        log.info("Configurando Redis en {}:{}", redisHost, redisPort);
-        return new LettuceConnectionFactory(config);
+
+        // Configuración de la password
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            config.setPassword(redisPassword);
+        }
+
+        // Configuracion de la conexión
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder()
+                .commandTimeout(Duration.ofMillis(redisTimeout));
+
+        // Habilitar SSL
+        if (redisUseSsl) {
+            builder.useSsl();
+            log.info("Configurando Redis en {}:{} con SSL activado", redisHost, redisPort);
+        } else {
+            log.info("Configurando Redis en {}:{} sin SSL", redisHost, redisPort);
+        }
+
+        return new LettuceConnectionFactory(config, builder.build());
     }
 
     @Bean
@@ -48,4 +74,4 @@ public class RedisConfig {
 
         return template;
     }
-} 
+}
