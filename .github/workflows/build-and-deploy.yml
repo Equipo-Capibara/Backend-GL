@@ -20,7 +20,6 @@
 name: Build and deploy JAR app to Azure Web App
 
 env:
-  AZURE_WEBAPP_NAME: backbackendcapibara    # set this to the name of your Azure Web App
   JAVA_VERSION: '17'                        # set this to the Java version to use
   DISTRIBUTION: zulu                        # set this to the Java distribution
 
@@ -63,6 +62,11 @@ jobs:
     permissions:
       contents: none
 
+    strategy:
+      matrix:
+        app_name: [guardianes-de-la-luz-backend-one, guardianes-de-la-luz-backend-two]
+        secret: [AZURE_WEBAPP_PUBLISH_PROFILE_ONE, AZURE_WEBAPP_PUBLISH_PROFILE_TWO]
+
     environment:
       name: 'application'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
@@ -73,10 +77,10 @@ jobs:
         with:
           name: backend-gl-java-app
 
-      - name: 🚀 Deploy to Azure Web App
+      - name: 🚀 Deploy to Azure Web App - ${{ matrix.app.name }}
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          app-name: ${{ matrix.app.name }}
+          publish-profile: ${{ secrets[matrix.app.secret] }}
           package: '*.jar'
