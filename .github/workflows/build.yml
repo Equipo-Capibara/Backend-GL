@@ -33,4 +33,4 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Equipo-Capibara_Backend-GL -Dsonar.organization=Equipo-Capibara -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=Equipo-Capibara_Backend-GL -Dsonar.organization=equipo-capibara -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
