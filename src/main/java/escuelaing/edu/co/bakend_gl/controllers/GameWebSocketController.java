@@ -40,6 +40,11 @@ public class GameWebSocketController {
         Board board = gameService.getBoardByRoomCode(roomCode);
 
         if (board != null) {
+
+            if(board.isComplete()){
+                messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/complete", "0");
+            }
+
             // Convertir a DTO para enviar solo los datos necesarios
             BoardStateDto boardState = BoardStateDto.fromBoard(board, roomCode, "move");
 
