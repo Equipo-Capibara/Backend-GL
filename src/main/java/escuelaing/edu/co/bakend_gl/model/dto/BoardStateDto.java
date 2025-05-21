@@ -96,7 +96,7 @@ public class BoardStateDto {
             // Agregar info del bloque si existe
             if (box.getBlock() != null) {
                 Map<String, Object> blockInfo = new HashMap<>();
-                blockInfo.put("type", box.getBlock().getClass().getSimpleName());
+                blockInfo.put("type", box.getBlock().getType());
                 blockInfo.put("destructible", box.getBlock().isDestructible());
                 dto.setBlock(blockInfo);
             }
