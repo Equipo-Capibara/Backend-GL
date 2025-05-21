@@ -1,12 +1,19 @@
 package escuelaing.edu.co.bakend_gl.model.characters;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Brisa extends Character {
+
+    public Brisa() {super(0,0, "Brisa");}
+
     public Brisa(int x, int y) {
-        super(x, y, "aire");
+        super(x, y, "Brisa");
     }
 
     @Override
     public void useAbility() {
-        System.out.println("Habilidad especial en mantenimiento");
+        log.info("Habilidad especial en mantenimiento");
     }
+
 }

@@ -1,15 +1,30 @@
 package escuelaing.edu.co.bakend_gl.model.board;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public class Box {
-    private int x, y;
+import java.io.Serializable;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Box implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private int x;
+    private int y;
     private Block block;
     private Character character;
     private Key key;
     private Door door;
+    private boolean walkable;
 
     public Box(int x, int y) {
         this.x = x;
@@ -18,50 +33,34 @@ public class Box {
         this.character = null;
         this.key = null;
         this.door = null;
+        this.walkable = true;
     }
 
+    @JsonIgnore
     public boolean isWalkable() {
-        return block == null && (door == null || !door.isLocked()) && character == null;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public Character getCharacter() {
-        return character;
-    }
-
-    public Block getBlock() {
-        return block;
+        boolean isWalkable = block == null && (door == null || !door.isLocked()) && character == null;
+        this.walkable = isWalkable;
+        return isWalkable;
     }
 
     public void setBlock(Block block) {
         this.block = block;
+        this.walkable = (block == null && (door == null || !door.isLocked()) && character == null);
     }
 
     public void removeBlock() {
         this.block = null;
+        this.walkable = ((door == null || !door.isLocked()) && character == null);
     }
 
     public void setCharacter(Character character) {
         this.character = character;
+        this.walkable = (block == null && (door == null || !door.isLocked()) && character == null);
     }
 
     public void removeCharacter() {
         this.character = null;
-    }
-
-    public void setKey(Key key) {
-        this.key = key;
-    }
-
-    public Key getKey() {
-        return key;
+        this.walkable = (block == null && (door == null || !door.isLocked()));
     }
 
     public boolean hasKey() {
@@ -74,9 +73,7 @@ public class Box {
 
     public void setDoor(Door door) {
         this.door = door;
+        this.walkable = (block == null && (door == null || !door.isLocked()) && character == null);
     }
 
-    public Door getDoor() {
-        return door;
-    }
 }

@@ -1,31 +1,28 @@
-package escuelaing.edu.co.bakend_gl.model.basicComponents;
+package escuelaing.edu.co.bakend_gl.model.basic_components;
 
 import jakarta.persistence.Id;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+@Data
+@NoArgsConstructor
 @Document(collection = "rooms")
 public class Room {
 
     @Id
     private String id;
-
-    private String code;
     private String hostId;
-    private boolean gameStarted;
-    private Map<String, Player> players = new HashMap<>();
-
-    public Room() {}
+    private String code = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+    private boolean gameStarted = false;
+    private Map<String, Player> players = new ConcurrentHashMap<>();
 
     public Room(String hostId) {
         this.hostId = hostId;
-        this.code = generateRoomCode();
-        this.gameStarted = false;
-    }
-
-    private String generateRoomCode() {
-        return UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
 
     public boolean canJoin() {
@@ -43,7 +40,9 @@ public class Room {
     public boolean confirmCharacterSelection(String playerId) {
         Player player = players.get(playerId);
         if (player != null) {
-            player.setCharacterSelected(true);
+            synchronized (player) {
+                player.setCharacterSelected(true);
+            }
             return true;
         }
         return false;
@@ -53,27 +52,4 @@ public class Room {
         return players.values().stream().allMatch(Player::isCharacterSelected);
     }
 
-    public void startGame() {
-        gameStarted = true;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public Map<String, Player> getPlayers() {
-        return players;
-    }
-
-    public boolean isGameStarted() {
-        return gameStarted;
-    }
-
-    public String getHostId() {
-        return hostId;
-    }
-
-    public void setHostId(String hostId) {
-        this.hostId = hostId;
-    }
 }

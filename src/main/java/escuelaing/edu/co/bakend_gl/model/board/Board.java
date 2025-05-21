@@ -3,25 +3,35 @@ package escuelaing.edu.co.bakend_gl.model.board;
 import escuelaing.edu.co.bakend_gl.model.blocks.Block;
 import escuelaing.edu.co.bakend_gl.model.characters.Character;
 import escuelaing.edu.co.bakend_gl.model.keys.Key;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Board {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Slf4j
+public class Board implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private String id;
     private int width;
     private int height;
     private Box[][] grid;
     private List<Key> collectedKeys;
-    private Character player;
-    private List<Character> characters;  // NUEVA LISTA
+    private List<Character> characters;
     private Door door;
 
-    public Board(int width, int height, Character player) {
+    public Board(int width, int height) {
         this.width = width;
         this.height = height;
-        this.player = player;
         this.collectedKeys = new ArrayList<>();
-        this.characters = new ArrayList<>(); // INICIALIZACIÓN
+        this.characters = new ArrayList<>();
         this.grid = new Box[width][height];
         this.door = null;
 
@@ -31,10 +41,6 @@ public class Board {
                 grid[i][j] = new Box(i, j);
             }
         }
-
-        // Ubicar al jugador principal
-        grid[player.getX()][player.getY()].setCharacter(player);
-        characters.add(player);
     }
 
     public void addCharacter(Character character) {
@@ -62,7 +68,7 @@ public class Board {
         return box != null && box.isWalkable();
     }
 
-    public void movePlayer(int newX, int newY) {
+    public void movePlayer(Character player, int newX, int newY) {
         if (isMoveValid(newX, newY)) {
             Box currentBox = getBox(player.getX(), player.getY());
             if (currentBox != null) {
@@ -73,15 +79,16 @@ public class Board {
             if (newBox != null) {
                 newBox.setCharacter(player);
                 player.setPosition(newX, newY);
-                collectKey(newBox);
+                collectKey(newBox, player);
             }
         }
     }
 
-    private void collectKey(Box box) {
+    private void collectKey(Box box, Character player) {
         if (box.hasKey() && box.getKey().canBePickedBy(player)) {
-            collectedKeys.add(box.getKey());
-            System.out.println("Llave recogida: " + box.getKey().getClass().getSimpleName());
+            Key key = box.getKey();
+            this.collectedKeys.add(key);
+            log.info("Llave recogida: {} por jugador: {}", key.getClass().getSimpleName(), player.getPlayerId());
 
             box.removeKey();
 
@@ -102,7 +109,7 @@ public class Board {
     private void unlockDoor() {
         if (door != null) {
             door.unlock();
-            System.out.println("¡Todas las llaves han sido recogidas! La puerta se ha abierto.");
+            log.info("¡Todas las llaves han sido recogidas! La puerta se ha abierto.");
         }
     }
 
@@ -120,37 +127,4 @@ public class Board {
         }
     }
 
-    // GETTERS
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public Box[][] getGrid() {
-        return grid;
-    }
-
-    public List<Key> getCollectedKeys() {
-        return collectedKeys;
-    }
-
-    public Character getPlayer() {
-        return player;
-    }
-
-    public void setPlayer(Character player) {
-        this.player = player;
-    }
-
-    public Door getDoor() {
-        return door;
-    }
-
-    public List<Character> getCharacters() {
-        return characters;
-    }
 }

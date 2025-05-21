@@ -1,28 +1,23 @@
 package escuelaing.edu.co.bakend_gl.model.board;
 
-public class Door {
-    private int x, y;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Door implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private int x;
+    private int y;
     private boolean isLocked;
-
-    public Door(int x, int y, boolean isLocked) {
-        this.x = x;
-        this.y = y;
-        this.isLocked = isLocked;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public boolean isLocked() {
-        return isLocked;
-    }
 
     public void unlock() {
         this.isLocked = false;
     }
+
 }
