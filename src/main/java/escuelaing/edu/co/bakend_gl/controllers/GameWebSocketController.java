@@ -1,12 +1,10 @@
 package escuelaing.edu.co.bakend_gl.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import escuelaing.edu.co.bakend_gl.model.board.Board;
 import escuelaing.edu.co.bakend_gl.model.dto.ActionPlayerDto;
 import escuelaing.edu.co.bakend_gl.model.dto.BoardStateDto;
 import escuelaing.edu.co.bakend_gl.services.BoardService;
 import escuelaing.edu.co.bakend_gl.services.GameService;
-import escuelaing.edu.co.bakend_gl.util.AESUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -31,37 +29,30 @@ public class GameWebSocketController {
      * Endpoint para mover un jugador
      */
     @MessageMapping("/game/{roomCode}/move")
-    public void movePlayer(@DestinationVariable String roomCode, @Payload String encryptedPayload) {
-        try {
-            String decryptedJson = AESUtil.decrypt(encryptedPayload);
-            ActionPlayerDto actionPlayerDto = new ObjectMapper().readValue(decryptedJson, ActionPlayerDto.class);
-
-            log.info("Recibida petición de movimiento en sala {}: jugador {} dirección {}",
+    public void movePlayer(@DestinationVariable String roomCode, @Payload ActionPlayerDto actionPlayerDto) {
+        log.info("Recibida petición de movimiento en sala {}: jugador {} dirección {}",
             roomCode, actionPlayerDto.getPlayerId(), actionPlayerDto.getDirection());
 
-            // Ejecutar movimiento
-            gameService.movePlayer(roomCode, actionPlayerDto.getPlayerId(), actionPlayerDto.getDirection());
+        // Ejecutar movimiento
+        gameService.movePlayer(roomCode, actionPlayerDto.getPlayerId(), actionPlayerDto.getDirection());
 
-            // Obtener tablero actualizado
-            Board board = gameService.getBoardByRoomCode(roomCode);
+        // Obtener tablero actualizado
+        Board board = gameService.getBoardByRoomCode(roomCode);
 
-            if (board != null) {
+        if (board != null) {
 
-                if(board.isComplete()){
-                    messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/complete", "0");
-                }
-
-                // Convertir a DTO para enviar solo los datos necesarios
-                BoardStateDto boardState = BoardStateDto.fromBoard(board, roomCode, "move");
-
-                // Enviar actualización a todos los clientes suscritos
-                messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/state", boardState);
-
-                // Actualizar en Redis con tiempo de expiración
-                boardService.saveWithExpiration(board, 2, TimeUnit.HOURS);
+            if(board.isComplete()){
+                messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/complete", "0");
             }
-        } catch (Exception e) {
-            log.error("Error al desencriptar o procesar el mensaje para mover jugador: {}", e.getMessage(), e);
+
+            // Convertir a DTO para enviar solo los datos necesarios
+            BoardStateDto boardState = BoardStateDto.fromBoard(board, roomCode, "move");
+
+            // Enviar actualización a todos los clientes suscritos
+            messagingTemplate.convertAndSend(TOPIC_GAME + roomCode + "/state", boardState);
+
+            // Actualizar en Redis con tiempo de expiración
+            boardService.saveWithExpiration(board, 2, TimeUnit.HOURS);
         }
     }
 
