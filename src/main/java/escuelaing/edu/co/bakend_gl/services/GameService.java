@@ -104,18 +104,58 @@ public class GameService {
         createBorders(board);
 
         // Llaves
-        board.getBox(3, 2).setKey(new KeyFlame(3, 2));
-        board.getBox(16, 3).setKey(new KeyAqua(16, 3));
-        board.getBox(5, 10).setKey(new KeyStone(5, 10));
-        board.getBox(13, 9).setKey(new KeyBrisa(13, 9));
+        board.getBox(9, 5).setKey(new KeyFlame(3, 2));
+        board.getBox(14, 7).setKey(new KeyAqua(16, 3));
+        board.getBox(3, 2).setKey(new KeyStone(5, 10));
+        board.getBox(4, 9).setKey(new KeyBrisa(13, 9));
 
         // Obstáculos
-        board.addBlock(new BlockIron(10, 0));
-        board.addBlock(new BlockIron(10, 1));
-        board.addBlock(new BlockIron(10, 2));
+        board.addBlock(new BlockIron(7, 3));
+        board.addBlock(new BlockIron(8, 3));
+        board.addBlock(new BlockIron(9, 3));
         board.addBlock(new BlockIron(10, 3));
-        board.addBlock(new BlockIron(10, 4));
-        board.addBlock(new BlockIron(10, 5));
+        board.addBlock(new BlockIron(11, 3));
+        board.addBlock(new BlockIron(11, 4));
+        board.addBlock(new BlockIron(7, 4));
+        board.addBlock(new BlockIron(7, 5));
+        board.addBlock(new BlockIron(7, 6));
+        board.addBlock(new BlockIron(14, 6));
+        board.addBlock(new BlockIron(15, 6));
+        board.addBlock(new BlockIron(16, 6));
+        board.addBlock(new BlockIron(17, 6));
+        board.addBlock(new BlockIron(10, 10));
+        board.addBlock(new BlockIron(9, 7));
+
+        // prueba nuevos bloques
+        board.addBlock(new BlockWater(4, 1));
+        board.addBlock(new BlockWater(4, 2));
+        board.addBlock(new BlockWater(4, 3));
+        board.addBlock(new BlockAir(3, 3));
+        board.addBlock(new BlockAir(2, 3));
+        board.addBlock(new BlockEarth(2, 4));
+        board.addBlock(new BlockFire(2, 5));
+        board.addBlock(new BlockFire(1, 5));
+        board.addBlock(new BlockWater(15, 1)); //
+        board.addBlock(new BlockEarth(15, 2));
+        board.addBlock(new BlockEarth(15, 3));
+        board.addBlock(new BlockFire(11, 5)); //
+        board.addBlock(new BlockFire(11, 6));
+        board.addBlock(new BlockFire(11, 7));
+        board.addBlock(new BlockWater(10, 7));
+        board.addBlock(new BlockWater(8, 7));
+        board.addBlock(new BlockAir(7, 7));
+        board.addBlock(new BlockAir(18, 6)); //
+        board.addBlock(new BlockAir(10, 9));
+        board.addBlock(new BlockWater(11, 9));
+        board.addBlock(new BlockWater(12, 9));
+        board.addBlock(new BlockFire(13, 9));
+        board.addBlock(new BlockWater(14, 9));
+        board.addBlock(new BlockFire(2, 8)); //
+        board.addBlock(new BlockWater(3, 8));
+        board.addBlock(new BlockWater(4, 8));
+        board.addBlock(new BlockAir(5, 8));
+        board.addBlock(new BlockEarth(5, 9));
+        board.addBlock(new BlockFire(5, 10));
 
         return board;
     }
