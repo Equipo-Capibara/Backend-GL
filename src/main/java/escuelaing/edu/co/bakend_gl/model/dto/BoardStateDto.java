@@ -104,7 +104,7 @@ public class BoardStateDto {
             // Agregar info de la llave si existe
             if (box.getKey() != null) {
                 Map<String, Object> keyInfo = new HashMap<>();
-                keyInfo.put("type", box.getKey().getClass().getSimpleName());
+                keyInfo.put("keyType", box.getKey().getClass().getSimpleName());
                 dto.setKey(keyInfo);
             }
 
