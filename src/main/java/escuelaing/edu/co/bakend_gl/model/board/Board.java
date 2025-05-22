@@ -26,6 +26,7 @@ public class Board implements Serializable {
     private List<Key> collectedKeys;
     private List<Character> characters;
     private Door door;
+    private boolean isComplete = false;
 
     public Board(int width, int height) {
         this.width = width;
@@ -93,7 +94,8 @@ public class Board implements Serializable {
             box.removeKey();
 
             if (collectedKeys.size() == 4) {
-                unlockDoor();
+                log.info("Todas las llaves fueron recogidas");
+                this.isComplete =true;
             }
         }
     }

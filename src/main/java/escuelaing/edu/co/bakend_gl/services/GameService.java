@@ -117,8 +117,6 @@ public class GameService {
         board.addBlock(new BlockIron(10, 4));
         board.addBlock(new BlockIron(10, 5));
 
-        board.placeDoor(10, 6);
-
         return board;
     }
 
